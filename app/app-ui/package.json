@@ -9,6 +9,9 @@
   },
   "dependencies": {
     "@devbookhq/splitter": "^1.4.2",
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^6.0.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-scripts": "^5.0.0"
