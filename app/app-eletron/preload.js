@@ -1,15 +1,12 @@
-window.addEventListener(
-    'DOMContentLoaded',
-    () => {
-        // const replaceText = (selector, text) => {
-        //     const element = document.getElementById(selector)
-        //     if (element) {
-        //         element.innerText = text
-        //     }
-        // }
+const { contextBridge } = require('electron')
 
-        // for (const dependency of ['chrome', 'node', 'electron']) {
-        //     replaceText(`${dependency}-version`, process.versions[dependency])
-        // }
-    }
-)
+contextBridge.exposeInMainWorld('electron', {
+    getNodeVersion: () => process.versions.node,
+    getChromeVersion: () => process.versions.chrome,
+    getElectronVersion: () => process.versions.electron,
+    getPlatform: () => process.platform,
+    getArch: () => process.arch,
+    getAppPath: () => process.execPath,
+    getAppArgs: () => process.argv,
+    getEnv: () => process.env
+})
