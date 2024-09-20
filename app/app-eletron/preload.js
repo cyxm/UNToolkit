@@ -1,6 +1,6 @@
-const { contextBridge } = require('electron')
+const { contextBridge, ipcRenderer } = require('electron')
 
-contextBridge.exposeInMainWorld('electron', {
+contextBridge.exposeInMainWorld('eApi', {
     getNodeVersion: () => process.versions.node,
     getChromeVersion: () => process.versions.chrome,
     getElectronVersion: () => process.versions.electron,
@@ -8,5 +8,7 @@ contextBridge.exposeInMainWorld('electron', {
     getArch: () => process.arch,
     getAppPath: () => process.execPath,
     getAppArgs: () => process.argv,
-    getEnv: () => process.env
+    getEnv: () => process.env,
+
+    openFile: () => ipcRenderer.invoke('openFile')
 })

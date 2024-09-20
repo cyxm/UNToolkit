@@ -1,32 +1,25 @@
 import Splitter, { SplitDirection } from "@devbookhq/splitter"
-import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
+import { Button } from "@mui/material";
+import { handleClick } from './HomeEvent'
+import { useState } from "react";
 
 export default function Home() {
+    const [filePath, setFilePath] = useState('filePath')
     return (
         <Splitter direction={SplitDirection.Horizontal} minWidths={[200, 250]}>
-            <Box>
-                <SimpleTreeView>
-                    <TreeItem itemId="grid" label="Data Grid">
-                        <TreeItem itemId="grid-community" label="@mui/x-data-grid" />
-                        <TreeItem itemId="grid-pro" label="@mui/x-data-grid-pro" />
-                        <TreeItem itemId="grid-premium" label="@mui/x-data-grid-premium" />
-                    </TreeItem>
-                    <TreeItem itemId="pickers" label="Date and Time Pickers">
-                        <TreeItem itemId="pickers-community" label="@mui/x-date-pickers" />
-                        <TreeItem itemId="pickers-pro" label="@mui/x-date-pickers-pro" />
-                    </TreeItem>
-                    <TreeItem itemId="charts" label="Charts">
-                        <TreeItem itemId="charts-community" label="@mui/x-charts" />
-                    </TreeItem>
-                    <TreeItem itemId="tree-view" label="Tree View">
-                        <TreeItem itemId="tree-view-community" label="@mui/x-tree-view" />
-                    </TreeItem>
-                </SimpleTreeView>
+            <SimpleTreeView>
+                <TreeItem itemId="grid" label="Data Grid">
+                    <TreeItem itemId="grid-community" label="@mui/x-data-grid" />
+                    <TreeItem itemId="grid-pro" label="@mui/x-data-grid-pro" />
+                    <TreeItem itemId="grid-premium" label="@mui/x-data-grid-premium" />
+                </TreeItem>
+            </SimpleTreeView>
+            <Box itemId="vFunctionContainer">
+                <Button onClick={() => handleClick(setFilePath)}>{filePath}111</Button>
             </Box>
-            <Button variant="contained">Hello world</Button>
         </Splitter>
     );
 }
