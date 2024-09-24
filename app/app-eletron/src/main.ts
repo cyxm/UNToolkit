@@ -2,7 +2,6 @@ import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 
 import { registerMainHandler } from './handler/MainHandler'
-// const rr = require('../src/handler/MainHandler.ts')
 
 const createWindow = () => {
     const win = new BrowserWindow({
