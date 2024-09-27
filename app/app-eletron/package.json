@@ -1,5 +1,5 @@
 {
-  "name": "toolkit",
+  "name": "UNToolkit",
   "version": "0.0.1",
   "description": "toolkit for software engineering",
   "main": "dist/main.js",

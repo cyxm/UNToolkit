@@ -1,0 +1,9 @@
+{
+    "initPosition": {
+        "width": 1200,
+        "height": 600,
+        "pos": {
+            "state": "center"
+        }
+    }
+}
