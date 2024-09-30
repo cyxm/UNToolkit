@@ -9,7 +9,7 @@ import { useState } from "react";
 export default function Home() {
     const [filePath, setFilePath] = useState('filePath')
     return (
-        <Splitter direction={SplitDirection.Horizontal} minWidths={[200, 250]}>
+        <Splitter direction={SplitDirection.Horizontal} minWidths={[200, 250]} initialSizes={[20, 80]}>
             <SimpleTreeView>
                 <TreeItem itemId="grid" label="Data Grid">
                     <TreeItem itemId="grid-community" label="@mui/x-data-grid" />
