@@ -1,3 +1,5 @@
+import "../styles.css";
+
 import Splitter, { SplitDirection } from "@devbookhq/splitter"
 import Box from '@mui/material/Box';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
@@ -10,8 +12,8 @@ import { useState } from "react";
 export default function Home() {
     const [filePath, setFilePath] = useState('filePath')
     return (
-        <Grid2 container>
-            <Title height={"40px"} />
+        <Stack direction={"column"}>
+            <Title styleName="component-title" />
             <Box size={12} height={"40px"} backgroundColor={"#1155f5"}>
                 <Splitter direction={SplitDirection.Horizontal} minWidths={[100, 100]} initialSizes={[20, 80]}>
                     <SimpleTreeView backgroundColor={"#1155f5"}>
@@ -26,6 +28,6 @@ export default function Home() {
                     </Box>
                 </Splitter>
             </Box>
-        </Grid2 >
+        </Stack >
     );
 }
