@@ -2,7 +2,7 @@ import Splitter, { SplitDirection } from "@devbookhq/splitter"
 import Box from '@mui/material/Box';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
-import { Button, Grid2, Stack } from "@mui/material";
+import { Button, Stack } from "@mui/material";
 import React from "react";
 import { Title } from "../../frag/title/Title";
 

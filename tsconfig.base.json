@@ -1,0 +1,25 @@
+{
+    // TypeScript编译器配置
+    "compilerOptions": {
+        // 编译目标ES版本
+        "target": "ES2022",
+        // 模块系统类型
+        "module": "ESNext",
+        // 模块解析策略
+        "moduleResolution": "NodeNext",
+        // 启用所有严格类型检查
+        "strict": true,
+        // 兼容CommonJS和ES模块
+        "esModuleInterop": true,
+        // 跳过库类型检查
+        "skipLibCheck": true,
+        // 强制文件名大小写一致
+        "forceConsistentCasingInFileNames": true,
+        // 允许导入JSON模块
+        "resolveJsonModule": true,
+        // 生成sourcemap文件
+        "sourceMap": true,
+        // 生成类型声明文件
+        "declaration": true
+    }
+}

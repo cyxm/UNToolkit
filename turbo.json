@@ -1,0 +1,38 @@
+{
+    "$schema": "https://turbo.build/schema.json",
+    "globalDependencies": [
+        "package.json",
+        "turbo.json"
+    ],
+    "tasks": {
+        "build": {
+            "dependsOn": [
+                "^build"
+            ],
+            "outputs": [
+                "dist/**",
+                "lib/**"
+            ]
+        },
+        "start": {
+            "cache": false,
+            "persistent": true,
+            "dependsOn": [
+                "^start"
+            ]
+        },
+        "lint": {
+            "dependsOn": [
+                "^lint"
+            ]
+        },
+        "test": {
+            "dependsOn": [
+                "^build"
+            ],
+            "outputs": [
+                "coverage/**"
+            ]
+        }
+    }
+}
