@@ -3,6 +3,7 @@
     "private": true,
     "packageManager": "pnpm@10.14.0",
     "version": "0.0.1",
+    "type": "module",
     "scripts": {
         "build": "turbo run build",
         "start": "turbo run start --parallel",

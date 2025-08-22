@@ -6,7 +6,7 @@
   "homepage": ".",
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && wait-on http://localhost:3000 && electron-forge start",
+    "start": "pnpm run build && wait-on http://localhost:3000 && electron-forge start",
     "test": "echo \"Error: no test specified\" && exit 1",
     "package": "electron-forge package",
     "make": "electron-forge make"
@@ -20,7 +20,7 @@
     "@electron-forge/maker-squirrel": "^7.8.3",
     "@electron-forge/maker-zip": "^7.8.3",
     "@electron-forge/plugin-auto-unpack-natives": "^7.8.3",
-    "@electron-forge/plugin-fuses": "^7.4.0",
+    "@electron-forge/plugin-fuses": "^7.8.3",
     "@electron/fuses": "^1.8.0",
     "@types/electron": "^1.6.12",
     "@types/node": "^24.3.0",
