@@ -1,5 +1,5 @@
 {
-    "name": "UNToolkit",
+    "name": "un-toolkit",
     "private": true,
     "packageManager": "pnpm@10.14.0",
     "version": "0.0.1",

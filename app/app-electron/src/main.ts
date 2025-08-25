@@ -79,18 +79,27 @@ app.on(
     }
 )
 
-ipcMain.on('window_min', function () {
-    mainWindow?.minimize();
-})
+// 窗口控制事件
+ipcMain.on('window_min', () => mainWindow?.minimize());
+ipcMain.on('window_max', () => {
+    mainWindow?.isMaximized() ? mainWindow.unmaximize() : mainWindow?.maximize();
+});
+ipcMain.on('window_close', () => mainWindow?.close());
 
-ipcMain.on('window_max', function () {
-    if (mainWindow?.isMaximized()) {
-        mainWindow?.unmaximize();
-    } else {
-        mainWindow?.maximize();
+// 模块通信事件处理器
+const eventHandlers: Record<string, (...args: any[]) => any> = {
+    'module:action': (payload: { payload: string }) => {
+        console.log('Received action:', payload);
+        // 处理逻辑...
+    },
+    'data:update': (data: any) => {
+        // 处理数据更新...
+        return { success: true };
     }
-})
+};
 
-ipcMain.on('window_close', function () {
-    mainWindow?.close();
-})
+// 注册事件处理器
+Object.entries(eventHandlers).forEach(([event, handler]) => {
+    ipcMain.handle(event, (_, ...args) => handler(...args));
+    ipcMain.on(event, (_, ...args) => handler(...args));
+});

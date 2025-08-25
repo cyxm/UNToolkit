@@ -4,9 +4,37 @@ import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { Button, Stack } from "@mui/material";
 import React from "react";
-import { Title } from "../../frag/title/Title";
+import { Title } from "@/frag/title/Title";
+// import { HomeEventManager } from "./event";
 
 export default class Home extends React.Component {
+    // private eventManager = HomeEventManager.getInstance();
+
+    componentDidMount() {
+        // 监听数据更新事件
+        // this.eventManager.onDataUpdate(this.handleDataUpdate);
+    }
+
+    componentWillUnmount() {
+        // 清理事件监听
+        // this.eventManager.cleanup();
+    }
+
+    handleDataUpdate = (data: { data: any }) => {
+        console.log('Received updated data:', data);
+        // 处理数据更新...
+    };
+
+    handleSendEvent = () => {
+        // 发送模块动作事件
+        // this.eventManager.sendAction('test action');
+        
+        // // 获取数据
+        // this.eventManager.fetchData().then(response => {
+        //     console.log('Fetched data:', response);
+        // });
+    };
+
     render() {
         return (
             <Stack direction={"column"}>
@@ -21,7 +49,7 @@ export default class Home extends React.Component {
                             </TreeItem>
                         </SimpleTreeView>
                         <Box component={"div"} itemID="vFunctionContainer">
-                            <Button>111</Button>
+                            <Button onClick={this.handleSendEvent}>发送事件</Button>
                         </Box>
                     </Splitter>
                 </Box>
@@ -29,24 +57,3 @@ export default class Home extends React.Component {
         )
     }
 }
-// export const Home: React.FC = () => {
-//     return (
-//         <Stack direction={"column"}>
-//             <Title />
-//             <Box size={12} height={"40px"} backgroundColor={"#1155f5"}>
-//                 <Splitter direction={SplitDirection.Horizontal} minWidths={[100, 100]} initialSizes={[20, 80]}>
-//                     <SimpleTreeView backgroundColor={"#1155f5"}>
-//                         <TreeItem itemId="grid" label="Data Grid">
-//                             <TreeItem itemId="grid-community" label="@mui/x-data-grid" />
-//                             <TreeItem itemId="grid-pro" label="@mui/x-data-grid-pro" />
-//                             <TreeItem itemId="grid-premium" label="@mui/x-data-grid-premium" />
-//                         </TreeItem>
-//                     </SimpleTreeView>
-//                     <Box itemId="vFunctionContainer">
-//                         <Button onClick={() => handleClick(setFilePath)}>{filePath}111</Button>
-//                     </Box>
-//                 </Splitter>
-//             </Box>
-//         </Stack >
-//     )
-// }
