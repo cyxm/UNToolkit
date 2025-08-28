@@ -1,33 +1,17 @@
 import { contextBridge, ipcRenderer } from "electron"
+import type { ElectronAPI } from "@un/tool-protocol/electron_api"
 
-// 事件桥接API
-contextBridge.exposeInMainWorld('eventBridge', {
-    on: (event: string, listener: (...args: any[]) => void) => {
-        ipcRenderer.on(event, (_, ...args) => listener(...args));
+// 实现API接口
+const electronAPI: ElectronAPI = {
+    file: {
+        readFile: async (path) => await ipcRenderer.invoke('file:read', path),
+        writeFile: async (path, content) => await ipcRenderer.invoke('file:write', path, content)
     },
-    once: (event: string, listener: (...args: any[]) => void) => {
-        ipcRenderer.once(event, (_, ...args) => listener(...args));
-    },
-    emit: (event: string, ...args: any[]) => {
-        ipcRenderer.send(event, ...args);
-    },
-    invoke: <T = any>(channel: string, ...args: any[]): Promise<T> => {
-        return ipcRenderer.invoke(channel, ...args);
-    },
-    removeListener: (event: string, listener: (...args: any[]) => void) => {
-        ipcRenderer.removeListener(event, listener);
+    system: {
+        getOS: async () => await ipcRenderer.invoke('system:os'),
+        showMessageBox: async (message) => await ipcRenderer.invoke('system:message', message)
     }
-});
+};
 
-// 其他工具API
-contextBridge.exposeInMainWorld('eApi', {
-    getNodeVersion: () => process.versions.node,
-    getChromeVersion: () => process.versions.chrome,
-    getElectronVersion: () => process.versions.electron,
-    getPlatform: () => process.platform,
-    getArch: () => process.arch,
-    getAppPath: () => process.execPath,
-    getAppArgs: () => process.argv,
-    getEnv: () => process.env,
-    openFile: () => ipcRenderer.invoke('openFile')
-});
+// 通过contextBridge安全暴露API'@app/protocol/src/preload'
+contextBridge.exposeInMainWorld('electron', electronAPI);

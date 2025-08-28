@@ -40,7 +40,7 @@ const createWindow = () => {
         width: preferenceObj.initPosition.width,
         height: preferenceObj.initPosition.height,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
+            preload: path.join(__dirname, 'preload.ts'),
             contextIsolation: true,
             nodeIntegration: true
         },
