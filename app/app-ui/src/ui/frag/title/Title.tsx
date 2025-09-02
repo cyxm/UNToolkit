@@ -11,7 +11,7 @@ import "./Title.css";
 export class Title extends React.Component {
     render() {
         function handleClose() {
-            alert('你点击了我！');
+            window.electron.window.close();
         }
 
         return (

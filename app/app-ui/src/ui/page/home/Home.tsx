@@ -1,7 +1,14 @@
-import Splitter, { SplitDirection } from "@devbookhq/splitter"
+import './home.css';
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 import Box from '@mui/material/Box';
-import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
-import { TreeItem } from '@mui/x-tree-view/TreeItem';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import ListSubheader from '@mui/material/ListSubheader';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { Button, Stack, IconButton } from "@mui/material";
 import React from "react";
 import { Title } from "@/ui/frag/title/Title.js";
@@ -13,33 +20,63 @@ export default function Home() {
     const { theme, toggleTheme } = useTheme();
 
     return (
-        <Stack direction={"column"}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack direction={"column"} sx={{ height: '100%' }}>
+            {/* 标题栏 */}
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{
+                boxShadow: theme.customShadows.header,
+                zIndex: 1,
+                backgroundColor: 'background.paper'
+            }}>
                 <Title />
                 <IconButton onClick={toggleTheme} color="inherit">
                     {theme.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
                 </IconButton>
             </Stack>
-            <Box height={"40px"} component={"div"} sx={{
-                backgroundColor: 'var(--primary-color)',
-                width: "100%"
+
+            {/* 内容区域 */}
+            <PanelGroup direction="horizontal" style={{
+                flexGrow: 1,
+                display: 'flex',
+                height: 'calc(100% - 64px)'
             }}>
-                <Splitter direction={SplitDirection.Horizontal} minWidths={[100, 100]} initialSizes={[20, 80]}>
-                    <SimpleTreeView sx={{
-                        backgroundColor: 'var(--primary-color)',
+                <Panel defaultSize={20} minSize={20}>
+                    <Box sx={{
+                        p: 2,
+                        height: '100%',
                         color: 'var(--text-color)'
                     }}>
-                        <TreeItem itemId="grid" label="Data Grid">
-                            <TreeItem itemId="grid-community" label="@mui/x-data-grid" />
-                            <TreeItem itemId="grid-pro" label="@mui/x-data-grid-pro" />
-                            <TreeItem itemId="grid-premium" label="@mui/x-data-grid-premium" />
-                        </TreeItem>
-                    </SimpleTreeView>
-                    <Box component={"div"} itemID="vFunctionContainer">
+                        <List component="nav">
+                            <ListSubheader>数据功能</ListSubheader>
+                            <ListItem component="div">
+                                <ListItemIcon>
+                                    <GridOnIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="数据表格" />
+                            </ListItem>
+                            <ListItem component="div">
+                                <ListItemIcon>
+                                    <BarChartIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="数据分析" />
+                            </ListItem>
+
+                            <ListSubheader>系统设置</ListSubheader>
+                            <ListItem component="div">
+                                <ListItemIcon>
+                                    <SettingsIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="系统配置" />
+                            </ListItem>
+                        </List>
+                    </Box>
+                </Panel>
+                <PanelResizeHandle className="resize-handle" />
+                <Panel defaultSize={80}>
+                    <Box component={"div"} itemID="vFunctionContainer" sx={{ height: '100%' }}>
                         <Button onClick={() => { }}>发送事件</Button>
                     </Box>
-                </Splitter>
-            </Box>
+                </Panel>
+            </PanelGroup>
         </Stack>
     );
 }

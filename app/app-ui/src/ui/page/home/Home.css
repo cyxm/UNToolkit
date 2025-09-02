@@ -1,0 +1,13 @@
+.resize-handle {
+    width: 4px;
+    background-color: var(--divider-color);
+    height: 100%;
+    cursor: col-resize;
+    transition: all 0.2s ease;
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+    opacity: 0.8;
+    box-shadow: 1px 0 4px var(--divider-color);
+}

@@ -10,6 +10,9 @@ export interface ElectronAPI {
         getOS: () => Promise<string>;
         showMessageBox: (message: string) => Promise<void>;
     };
+    window: {
+        close: () => void;
+    }
 }
 
 // 声明全局变量，让渲染进程可以识别

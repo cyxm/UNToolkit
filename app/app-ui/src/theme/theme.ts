@@ -6,6 +6,10 @@ export interface Theme {
     primary: string;
     background: string;
     text: string;
+    divider: string;
+  };
+  customShadows: {
+    header: string;
   };
 }
 
@@ -14,7 +18,11 @@ export const lightTheme: Theme = {
   palette: {
     primary: '#1976d2',
     background: '#ffffff',
-    text: '#000000'
+    text: '#000000',
+    divider: 'rgba(0, 0, 0, 0.12)'
+  },
+  customShadows: {
+    header: '0 2px 4px rgba(0, 0, 0, 0.1)'
   }
 };
 
@@ -23,6 +31,10 @@ export const darkTheme: Theme = {
   palette: {
     primary: '#90caf9',
     background: '#121212',
-    text: '#ffffff'
+    text: '#ffffff',
+    divider: 'rgba(255, 255, 255, 0.12)'
+  },
+  customShadows: {
+    header: '0 2px 4px rgba(255, 255, 255, 0.1)'
   }
 };

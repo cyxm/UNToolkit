@@ -16,12 +16,9 @@ const createWindow = () => {
         frame: false,
         // 隐藏菜单栏
         autoHideMenuBar: true,
-        // 可否最小化
         minimizable: true,
-        // 可否最大化
         maximizable: true,
-        // 展示关闭按钮
-        closable: false,
+        closable: true,
         // 全屏
         fullscreen: false,
         // 在任务栏显示图标
@@ -40,7 +37,7 @@ const createWindow = () => {
         width: preferenceObj.initPosition.width,
         height: preferenceObj.initPosition.height,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.ts'),
+            preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
             nodeIntegration: true
         },
@@ -48,10 +45,12 @@ const createWindow = () => {
     })
     // win.loadFile('index.html')
     mainWindow.loadURL('http://localhost:3000')
+    mainWindow?.on('ready-to-show', () => {
+        mainWindow?.maximize();  // 最大化窗口
+        mainWindow?.show();      // 显示窗口
+    });
     // 开发工具
-    if (process.env.NODE_ENV === 'development') {
-        mainWindow.webContents.openDevTools()
-    }
+    // mainWindow.webContents.openDevTools()
 }
 
 app.whenReady().then(
@@ -73,33 +72,23 @@ app.whenReady().then(
 app.on(
     'window-all-closed',
     () => {
-        if (process.platform !== 'darwin') {
-            app.quit()
-        }
+        app.quit()
     }
 )
 
 // 窗口控制事件
-ipcMain.on('window_min', () => mainWindow?.minimize());
-ipcMain.on('window_max', () => {
-    mainWindow?.isMaximized() ? mainWindow.unmaximize() : mainWindow?.maximize();
-});
-ipcMain.on('window_close', () => mainWindow?.close());
+// ipcMain.on('window_min', () => mainWindow?.minimize());
+// ipcMain.on('window_max', () => {
+//     mainWindow?.isMaximized() ? mainWindow.unmaximize() : mainWindow?.maximize();
+// });
 
-// 模块通信事件处理器
-const eventHandlers: Record<string, (...args: any[]) => any> = {
-    'module:action': (payload: { payload: string }) => {
-        console.log('Received action:', payload);
-        // 处理逻辑...
-    },
-    'data:update': (data: any) => {
-        // 处理数据更新...
-        return { success: true };
+ipcMain.handle('window_close', () => {
+    try {
+        // mainWindow?.webContents.closeDevTools();
+        mainWindow?.close();
+        return true;
+    } catch (err) {
+        console.error('Failed to handle window_close:', err);
+        return false;
     }
-};
-
-// 注册事件处理器
-Object.entries(eventHandlers).forEach(([event, handler]) => {
-    ipcMain.handle(event, (_, ...args) => handler(...args));
-    ipcMain.on(event, (_, ...args) => handler(...args));
 });

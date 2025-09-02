@@ -3,13 +3,18 @@ import { app } from 'electron'
 import FileUtil from "../util/FileUtil";
 
 const mainHandlers = [
-    { name: "openFile", handle: handleFileOpen }
+    { name: "openFile", handle: handleFileOpen },
+    // { name: "window_close", handle: handleCloseWindow },
 ]
 
 export function registerMainHandler() {
     mainHandlers.forEach(element => {
         ipcMain.handle(element.name, element.handle);
     });
+}
+
+async function handleCloseWindow() {
+
 }
 
 async function handleFileOpen() {

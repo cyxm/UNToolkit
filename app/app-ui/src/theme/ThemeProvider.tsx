@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Theme, ThemeMode, lightTheme, darkTheme } from './theme';
+import { Theme, ThemeMode, lightTheme, darkTheme } from './theme.js';
 
 interface ThemeContextType {
   theme: Theme;
@@ -8,7 +8,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: lightTheme,
-  toggleTheme: () => {}
+  toggleTheme: () => { }
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -31,6 +31,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     document.documentElement.style.setProperty('--primary-color', theme.palette.primary);
     document.documentElement.style.setProperty('--background-color', theme.palette.background);
     document.documentElement.style.setProperty('--text-color', theme.palette.text);
+    document.documentElement.style.setProperty('--divider-color', theme.palette.divider);
   };
 
   useEffect(() => {
