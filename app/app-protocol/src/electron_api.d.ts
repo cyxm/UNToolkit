@@ -5,12 +5,26 @@ export interface ElectronAPI {
         readFile: (path: string) => Promise<string>;
         writeFile: (path: string, content: string) => Promise<boolean>;
     };
+
     // 系统信息接口
     system: {
         getOS: () => Promise<string>;
         showMessageBox: (message: string) => Promise<void>;
     };
+
+    sql: {
+        getDatabases: () => void;
+        executeQuery: (db: any, query: any) => void;
+    };
+
+    api: {
+        getApiEndpoints: () => void;
+        callApi: (endpoint: any, params: any) => void;
+    };
+
     window: {
+        min: () => void;
+        max: () => void;
         close: () => void;
     }
 }

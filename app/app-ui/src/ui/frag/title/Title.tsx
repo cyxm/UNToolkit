@@ -10,6 +10,14 @@ import "./Title.css";
 
 export class Title extends React.Component {
     render() {
+        function handleMin() {
+            window.electron.window.min();
+        }
+
+        function handleMax() {
+            window.electron.window.max();
+        }
+
         function handleClose() {
             window.electron.window.close();
         }
@@ -26,10 +34,10 @@ export class Title extends React.Component {
                     <HomeRepairServiceIcon />
                 </IconButton>
                 <div className="draggable" style={{ height: "inherit", flexGrow: 1 }}></div>
-                <IconButton>
+                <IconButton onClick={handleMin}>
                     <MinimizeIcon />
                 </IconButton>
-                <IconButton>
+                <IconButton onClick={handleMax}>
                     <CropSquareIcon />
                 </IconButton>
                 <IconButton onClick={handleClose}>

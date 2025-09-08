@@ -56,7 +56,6 @@ const createWindow = () => {
 app.whenReady().then(
     () => {
         registerMainHandler()
-
         createWindow()
         app.on(
             'activate',
@@ -77,10 +76,11 @@ app.on(
 )
 
 // 窗口控制事件
-// ipcMain.on('window_min', () => mainWindow?.minimize());
-// ipcMain.on('window_max', () => {
-//     mainWindow?.isMaximized() ? mainWindow.unmaximize() : mainWindow?.maximize();
-// });
+ipcMain.handle('window_min', () => mainWindow?.minimize());
+
+ipcMain.handle('window_max', () => {
+    mainWindow?.isMaximized() ? mainWindow.unmaximize() : mainWindow?.maximize();
+});
 
 ipcMain.handle('window_close', () => {
     try {

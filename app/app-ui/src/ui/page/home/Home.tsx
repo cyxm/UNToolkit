@@ -9,18 +9,25 @@ import ListSubheader from '@mui/material/ListSubheader';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import SettingsIcon from '@mui/icons-material/Settings';
+import StorageIcon from '@mui/icons-material/Storage';
+import ApiIcon from '@mui/icons-material/Api';
 import { Button, Stack, IconButton } from "@mui/material";
 import React from "react";
 import { Title } from "@/ui/frag/title/Title.js";
 import { useTheme } from "@/theme/ThemeProvider.js";
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 export default function Home() {
     const { theme, toggleTheme } = useTheme();
+    const navigate = useNavigate();
 
     return (
-        <Stack direction={"column"} sx={{ height: '100%' }}>
+        <Stack direction={"column"} sx={{
+            flexGrow: 1,
+            height: '100%'
+        }}>
             {/* 标题栏 */}
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{
                 boxShadow: theme.customShadows.header,
@@ -37,43 +44,49 @@ export default function Home() {
             <PanelGroup direction="horizontal" style={{
                 flexGrow: 1,
                 display: 'flex',
-                height: 'calc(100% - 64px)'
+                height: '100%'
             }}>
                 <Panel defaultSize={20} minSize={20}>
                     <Box sx={{
                         p: 2,
-                        height: '100%',
-                        color: 'var(--text-color)'
+                        height: '100%'
                     }}>
                         <List component="nav">
-                            <ListSubheader>数据功能</ListSubheader>
-                            <ListItem component="div">
+                            <ListSubheader>基础功能</ListSubheader>
+                            <ListItem
+                                component={Button}
+                                onClick={() => navigate('cmd')}
+                            >
                                 <ListItemIcon>
                                     <GridOnIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="数据表格" />
+                                <ListItemText primary="命令行管理" />
                             </ListItem>
-                            <ListItem component="div">
+                            <ListItem
+                                component={Button}
+                                onClick={() => navigate('sql')}
+                            >
                                 <ListItemIcon>
-                                    <BarChartIcon />
+                                    <StorageIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="数据分析" />
+                                <ListItemText primary="SQL管理" />
                             </ListItem>
-
-                            <ListSubheader>系统设置</ListSubheader>
-                            <ListItem component="div">
+                            <ListItem
+                                component={Button}
+                                onClick={() => navigate('api')}
+                            >
                                 <ListItemIcon>
-                                    <SettingsIcon />
+                                    <ApiIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="系统配置" />
+                                <ListItemText primary="API调用" />
                             </ListItem>
                         </List>
                     </Box>
                 </Panel>
                 <PanelResizeHandle className="resize-handle" />
-                <Panel defaultSize={80}>
-                    <Box component={"div"} itemID="vFunctionContainer" sx={{ height: '100%' }}>
-                        <Button onClick={() => { }}>发送事件</Button>
+                <Panel>
+                    <Box sx={{ height: '100%' }}>
+                        <Outlet />
                     </Box>
                 </Panel>
             </PanelGroup>
