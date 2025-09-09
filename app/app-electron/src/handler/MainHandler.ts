@@ -1,35 +1,34 @@
 const { ipcMain, dialog } = require("electron");
 import { app } from 'electron'
+import path from 'path';
+import fs from 'fs';
 import FileUtil from "../util/FileUtil";
 import Database from 'better-sqlite3';
 
-// const dbPath = app.getPath('userData') + '/database.db';
-// let db: Database.Database;
+const dbPath = path.join(app.getAppPath(), 'db', 'db_manager.db');
+let db: Database.Database;
+
+// 检查数据库文件是否存在
+if (!fs.existsSync(dbPath)) {
+  console.error(`Database file not found at: ${dbPath}`);
+  throw new Error(`Database file not found at: ${dbPath}`);
+}
 
 const mainHandlers = [
     { name: "openFile", handle: handleFileOpen },
-    { name: "sql:getDatabases", handle: handleGetDatabases },
+
     { name: "sql:execute", handle: handleExecuteQuery },
+    { name: "sql:start", handle: dbStart },
+    { name: "sql:end", handle: dbEnd },
+
     { name: "api:getEndpoints", handle: handleGetApiEndpoints },
     { name: "api:call", handle: handleCallApi },
-    // { name: "window_close", handle: handleCloseWindow },
 ]
 
 export function registerMainHandler() {
-    // 初始化数据库连接
-    // db = new Database(dbPath);
-    // db.pragma('journal_mode = WAL');
-    
     mainHandlers.forEach(element => {
         ipcMain.handle(element.name, element.handle);
     });
-}
-
-async function handleCloseWindow() {
-    // 关闭数据库连接
-    // if (db) {
-    //     db.close();
-    // }
 }
 
 async function handleFileOpen() {
@@ -37,10 +36,56 @@ async function handleFileOpen() {
     dialog.showMessageBox({ type: 'info', message: path })
 }
 
-async function handleGetDatabases() {
+async function handleExecuteQuery(query: string) {
+    try {
+        if (!db) {
+            throw new Error('Database not connected');
+        }
+
+        // 检查查询类型
+        const queryType = query.trim().split(/\s+/)[0].toUpperCase();
+
+        switch (queryType) {
+            case 'SELECT':
+                const stmt = db.prepare(query);
+                const rows = stmt.all();
+                return { success: true, data: rows };
+            case 'INSERT':
+            case 'UPDATE':
+            case 'DELETE':
+                const result = db.prepare(query).run();
+                return { success: true, data: result };
+            default:
+                throw new Error('Unsupported SQL statement');
+        }
+    } catch (err) {
+        console.error('Failed to execute query:', err);
+        return { success: false, error: "Failed to execute query" };
+    }
 }
 
-async function handleExecuteQuery(dbName: string, query: string) {
+async function dbStart() {
+    try {
+        db = new Database(dbPath);
+        console.log('Database connected successfully');
+        return true;
+    } catch (err) {
+        console.error('Failed to connect to database:', err);
+        return false;
+    }
+}
+
+async function dbEnd() {
+    try {
+        if (db) {
+            db.close();
+            console.log('Database connection closed');
+        }
+        return true;
+    } catch (err) {
+        console.error('Failed to close database connection:', err);
+        return false;
+    }
 }
 
 async function handleGetApiEndpoints() {

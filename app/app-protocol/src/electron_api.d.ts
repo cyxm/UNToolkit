@@ -12,9 +12,10 @@ export interface ElectronAPI {
         showMessageBox: (message: string) => Promise<void>;
     };
 
-    sql: {
-        getDatabases: () => void;
-        executeQuery: (db: any, query: any) => void;
+    db: {
+        start: () => Promise<boolean>;
+        end: () => Promise<boolean>;
+        executeQuery: (query: string) => Promise<{success: boolean, data: any} | {success: false, error: string}>;
     };
 
     api: {

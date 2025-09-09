@@ -64,12 +64,12 @@ export default function Home() {
                             </ListItem>
                             <ListItem
                                 component={Button}
-                                onClick={() => navigate('sql')}
+                                onClick={() => navigate('db')}
                             >
                                 <ListItemIcon>
                                     <StorageIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="SQL管理" />
+                                <ListItemText primary="DB管理" />
                             </ListItem>
                             <ListItem
                                 component={Button}

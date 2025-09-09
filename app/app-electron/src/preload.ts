@@ -11,9 +11,10 @@ const electronAPI: ElectronAPI = {
         getOS: async () => await ipcRenderer.invoke('system:os'),
         showMessageBox: async (message) => await ipcRenderer.invoke('system:message', message)
     },
-    sql: {
-        getDatabases: async () => await ipcRenderer.invoke('sql:getDatabases'),
-        executeQuery: async (db: any, query: any) => await ipcRenderer.invoke('sql:execute', db, query)
+    db: {
+        executeQuery: async (query: string) => await ipcRenderer.invoke('sql:execute', query),
+        start: async () => await ipcRenderer.invoke('sql:start'),
+        end: async () => await ipcRenderer.invoke('sql:end')
     },
     api: {
         getApiEndpoints: async () => await ipcRenderer.invoke('api:getEndpoints'),
