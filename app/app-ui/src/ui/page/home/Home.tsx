@@ -69,7 +69,7 @@ export default function Home() {
                                 <ListItemIcon>
                                     <StorageIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="DB管理" />
+                                <ListItemText primary="DB设计" />
                             </ListItem>
                             <ListItem
                                 component={Button}

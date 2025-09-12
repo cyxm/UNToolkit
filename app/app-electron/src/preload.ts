@@ -12,9 +12,40 @@ const electronAPI: ElectronAPI = {
         showMessageBox: async (message) => await ipcRenderer.invoke('system:message', message)
     },
     db: {
-        executeQuery: async (query: string) => await ipcRenderer.invoke('sql:execute', query),
         start: async () => await ipcRenderer.invoke('sql:start'),
-        end: async () => await ipcRenderer.invoke('sql:end')
+        end: async () => await ipcRenderer.invoke('sql:end'),
+        databases: {
+            create: async (data: { version?: number; name: string; enable?: number }) =>
+                await ipcRenderer.invoke('databases:create', data),
+            query: async (params?: { id?: number; name?: string; enable?: number } & { enable?: 1 }) =>
+                await ipcRenderer.invoke('databases:query', params),
+            update: async (data: { id: number; version?: number; name?: string; enable?: number } & { enable?: 1 }) =>
+                await ipcRenderer.invoke('databases:update', data),
+            delete: async (id: number) =>
+                await ipcRenderer.invoke('databases:delete', id)
+        },
+        tables: {
+            create: async (data: {
+                version?: number;
+                name: string;
+                enable?: number;
+                database_id: number;
+            }) => await ipcRenderer.invoke('tables:create', data),
+            query: async (params?: {
+                id?: number;
+                name?: string;
+                enable?: number;
+                database_id?: number;
+            } & { enable?: 1 }) => await ipcRenderer.invoke('tables:query', params),
+            update: async (data: {
+                id: number;
+                version?: number;
+                name?: string;
+                enable?: number;
+                database_id?: number;
+            } & { enable?: 1 }) => await ipcRenderer.invoke('tables:update', data),
+            delete: async (id: number) => await ipcRenderer.invoke('tables:delete', id)
+        }
     },
     api: {
         getApiEndpoints: async () => await ipcRenderer.invoke('api:getEndpoints'),
