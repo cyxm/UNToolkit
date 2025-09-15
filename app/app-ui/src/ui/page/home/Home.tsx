@@ -85,7 +85,10 @@ export default function Home() {
                 </Panel>
                 <PanelResizeHandle className="resize-handle" />
                 <Panel>
-                    <Box sx={{ height: '100%' }}>
+                    <Box sx={{ 
+                        height: '100%',
+                        backgroundColor: '#f5f9ff' // 更淡的蓝色背景
+                    }}>
                         <Outlet />
                     </Box>
                 </Panel>

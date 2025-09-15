@@ -17,7 +17,16 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  DialogContentText
+  DialogContentText,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TablePagination,
+  TableSortLabel
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { ElectronAPI } from "@un/tool-protocol/electron_api"
@@ -29,10 +38,33 @@ export default function Db() {
   const [databaseList, setDatabaseList] = useState<Array<{ id: number, name: string }>>([]);
   const [selectedDb, setSelectedDb] = useState('');
   const [selectedTable, setSelectedTable] = useState('');
+  const [tableLoading, setTableLoading] = useState(false);
   const [dbAnchorEl, setDbAnchorEl] = useState<null | HTMLElement>(null);
   const [tableAnchorEl, setTableAnchorEl] = useState<null | HTMLElement>(null);
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [newDbName, setNewDbName] = useState<string>('');
+
+  useEffect(() => {
+    const fetchTableData = async () => {
+      if (!selectedTable) return;
+
+      try {
+        setTableLoading(true);
+        const result = await window.electron.db.tables.query({
+          table: selectedTable
+        });
+        if (result.success) {
+          setQueryResult(result.data);
+        }
+      } catch (err) {
+        console.error('Failed to load table data:', err);
+      } finally {
+        setTableLoading(false);
+      }
+    };
+
+    fetchTableData();
+  }, [selectedTable]);
 
   const handleAddDatabase = async () => {
     try {
@@ -177,19 +209,38 @@ export default function Db() {
       </Stack>
 
       <Stack sx={{ flexGrow: 1, height: '100%' }}>
-        <Box sx={{
-          flexGrow: 1,
-          border: '1px dashed',
-          borderColor: 'divider',
-          borderRadius: 4,
-          minHeight: 0,
-          p: 2,
-          overflow: 'auto'
-        }}>
-          {queryResult && (
-            <pre>{JSON.stringify(queryResult, null, 2)}</pre>
+        <TableContainer component={Paper} sx={{ flex: 1 }}>
+          {tableLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Table stickyHeader aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableCell width="33%">域名</TableCell>
+                  <TableCell align="center">类型</TableCell>
+                  <TableCell align="center">非空</TableCell>
+                  <TableCell align="center">默认</TableCell>
+                  <TableCell align="center">唯一</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {queryResult?.map((row: any) => (
+                  <TableRow key={row.id}>
+                    <TableCell component="th" scope="row" width="33%">
+                      {row.name}
+                    </TableCell>
+                    <TableCell align="center">{row.type}</TableCell>
+                    <TableCell align="center">{row.notNull ? '是' : '否'}</TableCell>
+                    <TableCell align="center">{row.defaultValue || '-'}</TableCell>
+                    <TableCell align="center">{row.unique ? '是' : '否'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
-        </Box>
+        </TableContainer>
       </Stack>
 
       {/* 数据库读取状态栏 */}
