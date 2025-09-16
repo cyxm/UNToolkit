@@ -12,7 +12,9 @@ const packages = [
     //启动时等待依赖服务
     "wait-on",
     //版本管理工具
-    "npm-check-updates"
+    "npm-check-updates",
+    "node-gyp",
+    "@electron/rebuild"
 ];
 
 // 检查是否有足够的权限

@@ -31,7 +31,172 @@ const mainHandlers = [
     { name: "tables:query", handle: handleQueryTables },
     { name: "tables:update", handle: handleUpdateTable },
     { name: "tables:delete", handle: handleDeleteTable },
+    { name: "fields:create", handle: handleCreateField },
+    { name: "fields:query", handle: handleQueryFields },
+    { name: "fields:update", handle: handleUpdateField },
+    { name: "fields:delete", handle: handleDeleteField },
 ]
+
+async function handleCreateField(
+    event: Electron.IpcMainInvokeEvent,
+    data: {
+        table_id: number;
+        name: string;
+        type: string;
+        primary_key?: number;
+        foreign_key?: number;
+        not_null?: number;
+        default_value?: string;
+        unique?: number;
+        enable?: number;
+    }
+) {
+    try {
+        if (!db) {
+            throw new Error('Database not connected');
+        }
+        const now = Date.now();
+        const stmt = db.prepare(
+            `INSERT INTO fields (
+                table_id, name, type, primary_key, foreign_key, 
+                not_null, default_value, unique, enable, 
+                create_time, update_time
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        );
+        const result = stmt.run(
+            data.table_id,
+            data.name,
+            data.type,
+            data.primary_key || 0,
+            data.foreign_key || 0,
+            data.not_null || 0,
+            data.default_value || null,
+            data.unique || 0,
+            data.enable || 1,
+            now,
+            now
+        );
+        return { success: true, id: result.lastInsertRowid };
+    } catch (err) {
+        console.error('Failed to create field:', err);
+        return { success: false, error: "Failed to create field" };
+    }
+}
+
+async function handleQueryFields(params: {
+    table_id: number;
+    enable?: number;
+}) {
+    try {
+        if (!db) {
+            throw new Error('Database not connected');
+        }
+        const conditions = ['table_id = ?'];
+        const values = [params.table_id];
+
+        if (params.enable !== undefined) {
+            conditions.push('enable = ?');
+            values.push(params.enable);
+        }
+
+        const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+        const sql = `SELECT * FROM fields ${where}`;
+
+        const stmt = db.prepare(sql);
+        const rows = stmt.all(...values);
+        return {
+            success: true,
+            data: {}
+        };
+    } catch (err) {
+        console.error('Failed to query fields:', err);
+        return { success: false, error: "Failed to query fields" };
+    }
+}
+
+async function handleUpdateField(data: {
+    id: number;
+    name?: string;
+    type?: string;
+    primary_key?: number;
+    foreign_key?: number;
+    not_null?: number;
+    default_value?: string;
+    unique?: number;
+    enable?: number;
+}) {
+    try {
+        if (!db) {
+            throw new Error('Database not connected');
+        }
+        const updates = [];
+        const values = [];
+
+        if (data.name !== undefined) {
+            updates.push('name = ?');
+            values.push(data.name);
+        }
+        if (data.type !== undefined) {
+            updates.push('type = ?');
+            values.push(data.type);
+        }
+        if (data.primary_key !== undefined) {
+            updates.push('primary_key = ?');
+            values.push(data.primary_key);
+        }
+        if (data.foreign_key !== undefined) {
+            updates.push('foreign_key = ?');
+            values.push(data.foreign_key);
+        }
+        if (data.not_null !== undefined) {
+            updates.push('not_null = ?');
+            values.push(data.not_null);
+        }
+        if (data.default_value !== undefined) {
+            updates.push('default_value = ?');
+            values.push(data.default_value);
+        }
+        if (data.unique !== undefined) {
+            updates.push('unique = ?');
+            values.push(data.unique);
+        }
+        if (data.enable !== undefined) {
+            updates.push('enable = ?');
+            values.push(data.enable);
+        }
+
+        if (updates.length === 0) {
+            return { success: false, error: "No fields to update" };
+        }
+
+        updates.push('update_time = ?');
+        values.push(Date.now());
+
+        values.push(data.id);
+
+        const sql = `UPDATE fields SET ${updates.join(', ')} WHERE id = ?`;
+        const stmt = db.prepare(sql);
+        const result = stmt.run(...values);
+        return { success: true, changes: result.changes };
+    } catch (err) {
+        console.error('Failed to update field:', err);
+        return { success: false, error: "Failed to update field" };
+    }
+}
+
+async function handleDeleteField(id: number) {
+    try {
+        if (!db) {
+            throw new Error('Database not connected');
+        }
+        const stmt = db.prepare('DELETE FROM fields WHERE id = ?');
+        const result = stmt.run(id);
+        return { success: true, changes: result.changes };
+    } catch (err) {
+        console.error('Failed to delete field:', err);
+        return { success: false, error: "Failed to delete field" };
+    }
+}
 
 export function registerMainHandler() {
     mainHandlers.forEach(element => {
