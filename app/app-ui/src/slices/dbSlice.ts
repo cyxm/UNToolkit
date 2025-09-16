@@ -10,13 +10,21 @@ interface QueryResult {
   [key: string]: any;
 }
 
+interface Table {
+  id: number;
+  name: string;
+  database_id: number;
+}
+
 interface DbState {
   loading: boolean;
   queryResult: QueryResult | null;
   dbReadStatus: 'unread' | 'read';
   databaseList: Database[];
+  tableList: Table[];
   selectedDb: string;
   selectedTable: string;
+  tablesLoading: boolean;
 }
 
 const initialState: DbState = {
@@ -24,8 +32,10 @@ const initialState: DbState = {
   queryResult: null,
   dbReadStatus: 'unread',
   databaseList: [],
+  tableList: [],
   selectedDb: '',
   selectedTable: '',
+  tablesLoading: false,
 };
 
 export const dbSlice = createSlice({
@@ -50,6 +60,12 @@ export const dbSlice = createSlice({
     setSelectedTable: (state, action: PayloadAction<string>) => {
       state.selectedTable = action.payload;
     },
+    setTableList: (state, action: PayloadAction<Table[]>) => {
+      state.tableList = action.payload;
+    },
+    setTablesLoading: (state, action: PayloadAction<boolean>) => {
+      state.tablesLoading = action.payload;
+    },
   },
 });
 
@@ -59,7 +75,9 @@ export const {
   setDbReadStatus, 
   setDatabaseList,
   setSelectedDb,
-  setSelectedTable
+  setSelectedTable,
+  setTableList,
+  setTablesLoading
 } = dbSlice.actions;
 
 export default dbSlice.reducer;
