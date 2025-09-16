@@ -323,7 +323,7 @@ export default function Db() {
 
       <Stack direction="row" sx={{ flexGrow: 1, height: '100%' }}>
         {/* 左侧操作面板 */}
-        <Box sx={{ width: 200, p: 2 }}>
+        <Box sx={{ width: 160, p: 2 }}>
           <Stack spacing={2}>
             {/* 数据类型选择 */}
             <Button
@@ -351,16 +351,16 @@ export default function Db() {
             <Divider />
 
             {/* 表格操作按钮 */}
-            <Button 
-              variant="outlined" 
+            <Button
+              variant="outlined"
               color="primary"
               onClick={() => setOpenAddFieldDialog(true)}
               fullWidth
             >
               添加字段
             </Button>
-            <Button 
-              variant="outlined" 
+            <Button
+              variant="outlined"
               color="secondary"
               onClick={() => {
                 setNewFieldName('');
@@ -373,8 +373,8 @@ export default function Db() {
             >
               取消
             </Button>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               color="primary"
               onClick={async () => {
                 try {
