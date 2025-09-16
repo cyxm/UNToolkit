@@ -1,4 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, useAppDispatch } from '@/store.js';
+import { 
+  setLoading, 
+  setQueryResult, 
+  setDbReadStatus, 
+  setDatabaseList,
+  setSelectedDb,
+  setSelectedTable
+} from '@/slices/dbSlice.js';
 import {
   Box,
   Stack,
@@ -32,12 +42,15 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { ElectronAPI } from "@un/tool-protocol/electron_api"
 
 export default function Db() {
-  const [loading, setLoading] = useState(false);
-  const [queryResult, setQueryResult] = useState<any>(null);
-  const [dbReadStatus, setDbReadStatus] = useState<'unread' | 'read'>('unread');
-  const [databaseList, setDatabaseList] = useState<Array<{ id: number, name: string }>>([]);
-  const [selectedDb, setSelectedDb] = useState('');
-  const [selectedTable, setSelectedTable] = useState('');
+  const dispatch = useAppDispatch();
+  const {
+    loading,
+    queryResult,
+    dbReadStatus,
+    databaseList,
+    selectedDb,
+    selectedTable
+  } = useSelector((state: RootState) => state.db);
   const [tableLoading, setTableLoading] = useState(false);
   const [dbAnchorEl, setDbAnchorEl] = useState<null | HTMLElement>(null);
   const [tableAnchorEl, setTableAnchorEl] = useState<null | HTMLElement>(null);
@@ -51,10 +64,10 @@ export default function Db() {
       try {
         setTableLoading(true);
         const result = await window.electron.db.tables.query({
-          table: selectedTable
+          name: selectedTable
         });
         if (result.success) {
-          setQueryResult(result.data);
+          dispatch(setQueryResult(result.data));
         }
       } catch (err) {
         console.error('Failed to load table data:', err);
@@ -87,20 +100,20 @@ export default function Db() {
   useEffect(() => {
     const initDb = async () => {
       try {
-        setLoading(true);
+        dispatch(setLoading(true));
         await window.electron.db.start();
         const result = await window.electron.db.databases.query();
         if (result.success) {
-          setDatabaseList(result.data.map((db: any) => ({
+          dispatch(setDatabaseList(result.data.map((db: any) => ({
             id: db.id,
             name: db.name
-          })));
-          setDbReadStatus('read')
+          }))));
+          dispatch(setDbReadStatus('read'));
         }
       } catch (err) {
         console.error('Failed to load databases:', err);
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     };
 
@@ -126,7 +139,7 @@ export default function Db() {
           <InputLabel>数据库</InputLabel>
           <Select
             label="数据库"
-            onChange={(e) => setSelectedDb(e.target.value)}
+            onChange={(e) => dispatch(setSelectedDb(e.target.value as string))}
           >
             {databaseList.map(db => (
               <MenuItem key={db.id} value={db.name}>
@@ -182,7 +195,7 @@ export default function Db() {
           <InputLabel>表</InputLabel>
           <Select
             label="表"
-            onChange={(e) => setSecondLevel(e.target.value)}
+            onChange={(e) => dispatch(setSelectedTable(e.target.value as string))}
           >
             <MenuItem value="option1">选项1</MenuItem>
             <MenuItem value="option2">选项2</MenuItem>
