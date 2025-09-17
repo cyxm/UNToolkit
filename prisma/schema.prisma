@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../app/app-electron/db/db_manager.db"
+}
+
+model databases {
+  id          Int     @id @default(autoincrement())
+  version     Int?
+  create_time Float?
+  update_time Float?
+  enable      Int?
+  name        String?
+}
+
+model fields {
+  id             Int     @id @default(autoincrement())
+  create_time    Float?
+  update_time    Float?
+  enable         Int?
+  name           String?
+  table_id       Int?
+  type           Int
+  primary        Int?
+  auto_increment Int?
+  not_null       Int?
+  unique         Int?
+  default        String?
+}
+
+model tables {
+  id          Int     @id @default(autoincrement())
+  version     Int?
+  create_time Float?
+  update_time Float?
+  enable      Int?
+  name        String?
+  database_id Int?
+}

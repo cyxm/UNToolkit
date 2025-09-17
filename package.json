@@ -11,12 +11,15 @@
         "format": "prettier --write \"**/*.{ts,tsx,md}\"",
         "test": "turbo run test",
         "release": "changeset publish",
-        "rebuild": "electron-rebuild"
+        "rebuild": "electron-rebuild",
+        "prisma:gen": "npx prisma generate",
+        "prisma:pull": "npx prisma db pull"
     },
     "devDependencies": {
         "@changesets/cli": "^2.29.6",
         "node-abi": "^4.14.0",
         "prettier": "^3.6.2",
+        "prisma": "^6.16.2",
         "turbo": "^2.5.6",
         "typescript": "^5.9.2",
         "wait-on": "^8.0.4"
@@ -24,5 +27,8 @@
     "engines": {
         "node": ">=18",
         "pnpm": ">=8"
+    },
+    "dependencies": {
+        "@prisma/client": "6.16.2"
     }
 }
