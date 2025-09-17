@@ -3,22 +3,12 @@ import { app } from 'electron'
 import path from 'path';
 import fs from 'fs';
 import FileUtil from "../util/FileUtil";
-import Database from 'better-sqlite3';
+import { Prisma, PrismaClient } from '@prisma/client';
 
-const dbPath = path.join(app.getAppPath(), 'db', 'db_manager.db');
-let db: Database.Database;
-
-// 检查数据库文件是否存在
-if (!fs.existsSync(dbPath)) {
-    console.error(`Database file not found at: ${dbPath}`);
-    throw new Error(`Database file not found at: ${dbPath}`);
-}
+const prisma = new PrismaClient();
 
 const mainHandlers = [
     { name: "openFile", handle: handleFileOpen },
-
-    { name: "sql:start", handle: dbStart },
-    { name: "sql:end", handle: dbEnd },
 
     { name: "api:getEndpoints", handle: handleGetApiEndpoints },
     { name: "api:call", handle: handleCallApi },
@@ -39,74 +29,36 @@ const mainHandlers = [
 
 async function handleCreateField(
     event: Electron.IpcMainInvokeEvent,
-    data: {
-        table_id: number;
-        name: string;
-        type: string;
-        primary_key?: number;
-        foreign_key?: number;
-        not_null?: number;
-        default_value?: string;
-        unique?: number;
-        enable?: number;
-    }
+    data: Prisma.fieldsCreateInput
 ) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-        const now = Date.now();
-        const stmt = db.prepare(
-            `INSERT INTO fields (
-                table_id, name, type, primary_key, foreign_key, 
-                not_null, default_value, unique, enable, 
-                create_time, update_time
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        );
-        const result = stmt.run(
-            data.table_id,
-            data.name,
-            data.type,
-            data.primary_key || 0,
-            data.foreign_key || 0,
-            data.not_null || 0,
-            data.default_value || null,
-            data.unique || 0,
-            data.enable || 1,
-            now,
-            now
-        );
-        return { success: true, id: result.lastInsertRowid };
+        const field = await prisma.fields.create({
+            data: {
+                ...data,
+                primary: data.primary ?? 0,
+                not_null: data.not_null ?? 0,
+                unique: data.unique ?? 0,
+                enable: data.enable ?? 1
+            }
+        });
+        return { success: true, id: field.id };
     } catch (err) {
         console.error('Failed to create field:', err);
         return { success: false, error: "Failed to create field" };
     }
 }
 
-async function handleQueryFields(params: {
-    table_id: number;
-    enable?: number;
-}) {
+async function handleQueryFields(params: Prisma.fieldsFindManyArgs) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-        const conditions = ['table_id = ?'];
-        const values = [params.table_id];
-
-        if (params.enable !== undefined) {
-            conditions.push('enable = ?');
-            values.push(params.enable);
-        }
-
-        const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-        const sql = `SELECT * FROM fields ${where}`;
-
-        const stmt = db.prepare(sql);
-        const rows = stmt.all(...values);
+        const fields = await prisma.fields.findMany({
+            where: {
+                table_id: params.where?.table_id,
+                enable: params.where?.enable
+            }
+        });
         return {
             success: true,
-            data: {}
+            data: fields
         };
     } catch (err) {
         console.error('Failed to query fields:', err);
@@ -114,70 +66,21 @@ async function handleQueryFields(params: {
     }
 }
 
-async function handleUpdateField(data: {
-    id: number;
-    name?: string;
-    type?: string;
-    primary_key?: number;
-    foreign_key?: number;
-    not_null?: number;
-    default_value?: string;
-    unique?: number;
-    enable?: number;
-}) {
+async function handleUpdateField(data: Prisma.fieldsUpdateArgs) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-        const updates = [];
-        const values = [];
-
-        if (data.name !== undefined) {
-            updates.push('name = ?');
-            values.push(data.name);
-        }
-        if (data.type !== undefined) {
-            updates.push('type = ?');
-            values.push(data.type);
-        }
-        if (data.primary_key !== undefined) {
-            updates.push('primary_key = ?');
-            values.push(data.primary_key);
-        }
-        if (data.foreign_key !== undefined) {
-            updates.push('foreign_key = ?');
-            values.push(data.foreign_key);
-        }
-        if (data.not_null !== undefined) {
-            updates.push('not_null = ?');
-            values.push(data.not_null);
-        }
-        if (data.default_value !== undefined) {
-            updates.push('default_value = ?');
-            values.push(data.default_value);
-        }
-        if (data.unique !== undefined) {
-            updates.push('unique = ?');
-            values.push(data.unique);
-        }
-        if (data.enable !== undefined) {
-            updates.push('enable = ?');
-            values.push(data.enable);
-        }
-
-        if (updates.length === 0) {
-            return { success: false, error: "No fields to update" };
-        }
-
-        updates.push('update_time = ?');
-        values.push(Date.now());
-
-        values.push(data.id);
-
-        const sql = `UPDATE fields SET ${updates.join(', ')} WHERE id = ?`;
-        const stmt = db.prepare(sql);
-        const result = stmt.run(...values);
-        return { success: true, changes: result.changes };
+        const result = await prisma.fields.update({
+            where: { id: data.where?.id },
+            data: {
+                name: data.data?.name,
+                type: data.data?.type,
+                primary: data.data?.primary,
+                not_null: data.data?.not_null,
+                default: data.data?.default,
+                unique: data.data?.unique,
+                enable: data.data?.enable
+            }
+        });
+        return { success: true, changes: 1 };
     } catch (err) {
         console.error('Failed to update field:', err);
         return { success: false, error: "Failed to update field" };
@@ -186,12 +89,10 @@ async function handleUpdateField(data: {
 
 async function handleDeleteField(id: number) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-        const stmt = db.prepare('DELETE FROM fields WHERE id = ?');
-        const result = stmt.run(id);
-        return { success: true, changes: result.changes };
+        const result = await prisma.fields.delete({
+            where: { id }
+        });
+        return { success: true, changes: 1 };
     } catch (err) {
         console.error('Failed to delete field:', err);
         return { success: false, error: "Failed to delete field" };
@@ -209,30 +110,7 @@ async function handleFileOpen() {
     dialog.showMessageBox({ type: 'info', message: path })
 }
 
-async function dbStart() {
-    try {
-        console.log('Database path:', dbPath);
-        db = new Database(dbPath);
-        console.log('Database connected successfully');
-        return true;
-    } catch (err) {
-        console.error('Failed to connect to database:', err);
-        return false;
-    }
-}
 
-async function dbEnd() {
-    try {
-        if (db) {
-            db.close();
-            console.log('Database connection closed');
-        }
-        return true;
-    } catch (err) {
-        console.error('Failed to close database connection:', err);
-        return false;
-    }
-}
 
 async function handleGetApiEndpoints() {
     // 这里应该是实际的API端点获取逻辑
@@ -261,100 +139,47 @@ async function handleCreateDatabase(
     version?: number
 ) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-        const now = Date.now();
-        const stmt = db.prepare(
-            `INSERT INTO databases (version, create_time, update_time, enable, name) 
-             VALUES (?, ?, ?, ?, ?)`
-        );
-        const result = stmt.run(
-            version ?? 1,
-            now,
-            now,
-            1,
-            dbName
-        );
-        return { success: true, id: result.lastInsertRowid };
+        const database = await prisma.databases.create({
+            data: {
+                name: dbName,
+                version: version ?? 1,
+                enable: 1
+            }
+        });
+        return { success: true, id: database.id };
     } catch (err) {
         console.error('Failed to create database:', err);
         return { success: false, error: "Failed to create database" };
     }
 }
 
-async function handleQueryDatabases(params: {
-    id?: number;
-    name?: string;
-    enable?: number;
-} = { enable: 1 }) {
+async function handleQueryDatabases(params: Prisma.databasesFindManyArgs = { where: { enable: 1 } }) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-
-        const conditions = [];
-        const values = [];
-
-        if (params.id !== undefined) {
-            conditions.push('id = ?');
-            values.push(params.id);
-        }
-        if (params.name !== undefined) {
-            conditions.push('name = ?');
-            values.push(params.name);
-        }
-        if (params.enable !== undefined) {
-            conditions.push('enable = ?');
-            values.push(params.enable);
-        }
-
-        const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-        const sql = `SELECT * FROM databases ${where}`;
-
-        const stmt = db.prepare(sql);
-        const rows = stmt.all(...values);
-        return { success: true, data: rows };
+        const databases = await prisma.databases.findMany({
+            where: {
+                id: params.where?.id,
+                name: params.where?.name,
+                enable: params.where?.enable
+            }
+        });
+        return { success: true, data: databases };
     } catch (err) {
         console.error('Failed to query databases:', err);
         return { success: false, error: "Failed to query databases" };
     }
 }
 
-async function handleUpdateDatabase(data: {
-    id: number;
-    version?: number;
-    name?: string;
-    enable?: number;
-} & { enable?: 1 }) {
+async function handleUpdateDatabase(data: Prisma.databasesUpdateArgs) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-
-        const updates = [];
-        const values = [];
-
-        if (data.version !== undefined) {
-            updates.push('version = ?');
-            values.push(data.version);
-        }
-        if (data.name !== undefined) {
-            updates.push('name = ?');
-            values.push(data.name);
-        }
-        if (data.enable !== undefined) {
-            updates.push('enable = ?');
-            values.push(data.enable);
-        }
-
-        values.push(Date.now());
-        values.push(data.id);
-        const sql = `UPDATE databases SET ${updates.join(', ')}, update_time = ? WHERE id = ?`;
-
-        const stmt = db.prepare(sql);
-        const result = stmt.run(...values);
-        return { success: true, changes: result.changes };
+        const result = await prisma.databases.update({
+            where: { id: data.where?.id },
+            data: {
+                version: data.data?.version,
+                name: data.data?.name,
+                enable: data.data?.enable
+            }
+        });
+        return { success: true, changes: 1 };
     } catch (err) {
         console.error('Failed to update database:', err);
         return { success: false, error: "Failed to update database" };
@@ -363,118 +188,53 @@ async function handleUpdateDatabase(data: {
 
 async function handleCreateTable(
     event: Electron.IpcMainInvokeEvent,
-    data: {
-        name: string;
-        database_id: number;
-        version?: number;
-        enable?: number;
-    }) {
+    data: Prisma.tablesCreateInput
+) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-        const now = Date.now();
-        const stmt = db.prepare(
-            `INSERT INTO tables (version, create_time, update_time, enable, name, database_id) 
-             VALUES (?, ?, ?, ?, ?, ?)`
-        );
-        const result = stmt.run(
-            data.version ?? 1,
-            now,
-            now,
-            data.enable ?? 1,
-            data.name,
-            data.database_id
-        );
-        return { success: true, id: result.lastInsertRowid };
+        const table = await prisma.tables.create({
+            data: {
+                name: data.name,
+                database_id: data.database_id,
+                version: data.version ?? 1,
+                enable: data.enable ?? 1
+            }
+        });
+        return { success: true, id: table.id };
     } catch (err) {
         console.error('Failed to create table:', err);
         return { success: false, error: "Failed to create table" };
     }
 }
 
-async function handleQueryTables(params: {
-    id?: number;
-    name?: string;
-    enable?: number;
-    database_id?: number;
-} = { enable: 1 }) {
+async function handleQueryTables(params: Prisma.tablesFindManyArgs = { where: { enable: 1 } }) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-
-        const conditions = [];
-        const values = [];
-
-        if (params.id !== undefined) {
-            conditions.push('id = ?');
-            values.push(params.id);
-        }
-        if (params.name !== undefined) {
-            conditions.push('name = ?');
-            values.push(params.name);
-        }
-        if (params.enable !== undefined) {
-            conditions.push('enable = ?');
-            values.push(params.enable);
-        }
-        if (params.database_id !== undefined) {
-            conditions.push('database_id = ?');
-            values.push(params.database_id);
-        }
-
-        const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-        const sql = `SELECT * FROM tables ${where}`;
-
-        const stmt = db.prepare(sql);
-        const rows = stmt.all(...values);
-        return { success: true, data: rows };
+        const tables = await prisma.tables.findMany({
+            where: {
+                id: params.where?.id,
+                name: params.where?.name,
+                enable: params.where?.enable,
+                database_id: params.where?.database_id
+            }
+        });
+        return { success: true, data: tables };
     } catch (err) {
         console.error('Failed to query tables:', err);
         return { success: false, error: "Failed to query tables" };
     }
 }
 
-async function handleUpdateTable(data: {
-    id: number;
-    version?: number;
-    name?: string;
-    enable?: number;
-    database_id?: number;
-}) {
+async function handleUpdateTable(data: Prisma.tablesUpdateArgs) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-
-        const updates = [];
-        const values = [];
-
-        if (data.version !== undefined) {
-            updates.push('version = ?');
-            values.push(data.version);
-        }
-        if (data.name !== undefined) {
-            updates.push('name = ?');
-            values.push(data.name);
-        }
-        if (data.enable !== undefined) {
-            updates.push('enable = ?');
-            values.push(data.enable);
-        }
-        if (data.database_id !== undefined) {
-            updates.push('database_id = ?');
-            values.push(data.database_id);
-        }
-
-        values.push(Date.now());
-        values.push(data.id);
-        const sql = `UPDATE tables SET ${updates.join(', ')}, update_time = ? WHERE id = ?`;
-
-        const stmt = db.prepare(sql);
-        const result = stmt.run(...values);
-        return { success: true, changes: result.changes };
+        const result = await prisma.tables.update({
+            where: { id: data.where?.id },
+            data: {
+                version: data.data?.version,
+                name: data.data?.name,
+                enable: data.data?.enable,
+                database_id: data.data?.database_id
+            }
+        });
+        return { success: true, changes: 1 };
     } catch (err) {
         console.error('Failed to update table:', err);
         return { success: false, error: "Failed to update table" };
@@ -483,12 +243,10 @@ async function handleUpdateTable(data: {
 
 async function handleDeleteTable(id: number) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-        const stmt = db.prepare('DELETE FROM tables WHERE id = ?');
-        const result = stmt.run(id);
-        return { success: true, changes: result.changes };
+        const result = await prisma.tables.delete({
+            where: { id }
+        });
+        return { success: true, changes: 1 };
     } catch (err) {
         console.error('Failed to delete table:', err);
         return { success: false, error: "Failed to delete table" };
@@ -497,13 +255,10 @@ async function handleDeleteTable(id: number) {
 
 async function handleDeleteDatabase(id: number) {
     try {
-        if (!db) {
-            throw new Error('Database not connected');
-        }
-
-        const stmt = db.prepare('DELETE FROM databases WHERE id = ?');
-        const result = stmt.run(id);
-        return { success: true, changes: result.changes };
+        const result = await prisma.databases.delete({
+            where: { id }
+        });
+        return { success: true, changes: 1 };
     } catch (err) {
         console.error('Failed to delete database:', err);
         return { success: false, error: "Failed to delete database" };

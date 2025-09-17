@@ -1,11 +1,10 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = "file:../app/app-electron/db/db_manager.db"
+  url      = env("DATABASE_URL")
 }
 
 model databases {
@@ -24,7 +23,7 @@ model fields {
   enable         Int?
   name           String?
   table_id       Int?
-  type           Int
+  type           String
   primary        Int?
   auto_increment Int?
   not_null       Int?

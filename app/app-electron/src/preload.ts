@@ -1,5 +1,6 @@
 import { contextBridge, ipcMain, ipcRenderer } from "electron"
 import type { ElectronAPI } from "@un/tool-protocol/electron_api"
+import { Prisma } from '@prisma/client';
 
 // 实现API接口
 const electronAPI: ElectronAPI = {
@@ -15,60 +16,21 @@ const electronAPI: ElectronAPI = {
         start: async () => await ipcRenderer.invoke('sql:start'),
         end: async () => await ipcRenderer.invoke('sql:end'),
         databases: {
-            create: async (data: { version?: number; name: string; enable?: number; }) => await ipcRenderer.invoke('databases:create', data),
-            query: async (params?: { id?: number; name?: string; enable?: number; } & { enable?: 1; }) => await ipcRenderer.invoke('databases:query', params),
-            update: async (data: { id: number; version?: number; name?: string; enable?: number; } & { enable?: 1; }) => await ipcRenderer.invoke('databases:update', data),
+            create: async (data: Prisma.databasesCreateInput) => await ipcRenderer.invoke('databases:create', data),
+            query: async (params?: Prisma.databasesFindManyArgs) => await ipcRenderer.invoke('databases:query', params),
+            update: async (data: Prisma.databasesUpdateArgs) => await ipcRenderer.invoke('databases:update', data),
             delete: async (id: number) => await ipcRenderer.invoke('databases:delete', id)
         },
         tables: {
-            create: async (data: {
-                version?: number;
-                name: string;
-                enable?: number;
-                database_id: number;
-            }) => await ipcRenderer.invoke('tables:create', data),
-            query: async (params?: {
-                id?: number;
-                name?: string;
-                enable?: number;
-                database_id?: number;
-            } & { enable?: 1; }) => await ipcRenderer.invoke('tables:query', params),
-            update: async (data: {
-                id: number;
-                version?: number;
-                name?: string;
-                enable?: number;
-                database_id?: number;
-            } & { enable?: 1; }) => await ipcRenderer.invoke('tables:update', data),
+            create: async (data: Prisma.tablesCreateInput) => await ipcRenderer.invoke('tables:create', data),
+            query: async (params?: Prisma.tablesFindManyArgs) => await ipcRenderer.invoke('tables:query', params),
+            update: async (data: Prisma.tablesUpdateArgs) => await ipcRenderer.invoke('tables:update', data),
             delete: async (id: number) => await ipcRenderer.invoke('tables:delete', id)
         },
         fields: {
-            create: async (data: {
-                table_id: number;
-                name: string;
-                type: string;
-                primary_key?: number;
-                foreign_key?: number;
-                not_null?: number;
-                default_value?: string;
-                unique?: number;
-                enable?: number;
-            }) => await ipcRenderer.invoke('fields:create', data),
-            query: async (params: {
-                table_id: number;
-                enable?: number;
-            }) => await ipcRenderer.invoke('fields:query', params),
-            update: async (data: {
-                id: number;
-                name?: string;
-                type?: string;
-                primary_key?: number;
-                foreign_key?: number;
-                not_null?: number;
-                default_value?: string;
-                unique?: number;
-                enable?: number;
-            }) => await ipcRenderer.invoke('fields:update', data),
+            create: async (data: Prisma.fieldsCreateInput) => await ipcRenderer.invoke('fields:create', data),
+            query: async (params: Prisma.fieldsFindManyArgs) => await ipcRenderer.invoke('fields:query', params),
+            update: async (data: Prisma.fieldsUpdateArgs) => await ipcRenderer.invoke('fields:update', data),
             delete: async (id: number) => await ipcRenderer.invoke('fields:delete', id)
         }
     },

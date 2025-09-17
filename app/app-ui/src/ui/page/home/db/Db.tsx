@@ -4,7 +4,6 @@ import { RootState, useAppDispatch } from '@/store.js';
 import {
   setLoading,
   setQueryResult,
-  setDbReadStatus,
   setDatabaseList,
   setSelectedDb,
   setSelectedTable,
@@ -114,14 +113,12 @@ export default function Db() {
     const initDb = async () => {
       try {
         dispatch(setLoading(true));
-        await window.electron.db.start();
         const result = await window.electron.db.databases.query();
         if (result.success) {
           dispatch(setDatabaseList(result.data.map((db: any) => ({
             id: db.id,
             name: db.name
           }))));
-          dispatch(setDbReadStatus('read'));
         }
       } catch (err) {
         console.error('Failed to load databases:', err);
@@ -131,9 +128,6 @@ export default function Db() {
     };
 
     initDb();
-    return () => {
-      window.electron.db.end();
-    };
   }, []);
 
   if (loading) {
@@ -493,23 +487,6 @@ export default function Db() {
           )}
         </TableContainer>
       </Stack>
-
-      {/* 数据库读取状态栏 */}
-      <Box
-        sx={{
-          height: '28px', // 缩小高度
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: dbReadStatus === 'read' ? 'success.main' : 'error.main',
-          color: 'white',
-          borderRadius: 1,
-          fontSize: '0.8rem', // 调整字体大小
-          transition: 'all 0.3s ease' // 添加过渡效果
-        }}
-      >
-        {dbReadStatus === 'read' ? '数据库已读取' : '数据库未读取'}
-      </Box>
     </Stack>
   );
 }

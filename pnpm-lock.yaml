@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@prisma/client':
-        specifier: 6.16.2
-        version: 6.16.2(prisma@6.16.2(typescript@5.9.2))(typescript@5.9.2)
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.6
@@ -36,6 +32,9 @@ importers:
 
   app/app-electron:
     dependencies:
+      '@prisma/client':
+        specifier: 6.16.2
+        version: 6.16.2(prisma@6.16.2(typescript@5.9.2))(typescript@5.9.2)
       '@types/better-sqlite3':
         specifier: ^7.6.13
         version: 7.6.13

@@ -48,9 +48,6 @@ export const dbSlice = createSlice({
     setQueryResult: (state, action: PayloadAction<QueryResult | null>) => {
       state.queryResult = action.payload;
     },
-    setDbReadStatus: (state, action: PayloadAction<'unread' | 'read'>) => {
-      state.dbReadStatus = action.payload;
-    },
     setDatabaseList: (state, action: PayloadAction<Database[]>) => {
       state.databaseList = action.payload;
     },
