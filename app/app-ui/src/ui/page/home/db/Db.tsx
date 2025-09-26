@@ -8,8 +8,13 @@ import {
   setSelectedDb,
   setSelectedTable,
   setTableList,
-  setTablesLoading
-} from '@/slices/dbSlice.js';
+  setTablesLoading,
+  setFieldList,
+  setSelectedFields,
+  setOpenAddTableDialog,
+  setOpenAddFieldDialog,
+  setDataType
+} from './dbSlice.js';
 import {
   Box,
   Stack,
@@ -17,18 +22,12 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  TextField,
   CircularProgress,
   Alert,
   Divider,
   Button,
   IconButton,
   Menu,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  DialogContentText,
   Table,
   TableBody,
   TableCell,
@@ -37,8 +36,13 @@ import {
   TableRow,
   Paper,
   TablePagination,
-  TableSortLabel
+  TableSortLabel,
+  Chip
 } from '@mui/material';
+import InputDialog from '@/ui/dialog/InputDialog.js';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddFieldDialog from './AddFieldDialog.js';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { ElectronAPI } from "@un/tool-protocol/electron_api"
 
@@ -50,24 +54,26 @@ export default function Db() {
     dbReadStatus,
     databaseList,
     tableList,
+    fieldList,
     selectedDb,
     selectedTable,
-    tablesLoading
+    selectedFields,
+    tablesLoading,
+    tableLoading,
+    fieldLoading,
+    dbAnchorEl,
+    tableAnchorEl,
+    dataType,
+    openAddFieldDialog,
+    editingField,
+    fieldToDelete,
+    openAddDialog,
+    openAddTableDialog
   } = useSelector((state: RootState) => state.db);
-  const [tableLoading, setTableLoading] = useState(false);
-  const [dbAnchorEl, setDbAnchorEl] = useState<null | HTMLElement>(null);
-  const [tableAnchorEl, setTableAnchorEl] = useState<null | HTMLElement>(null);
-  const [openAddDialog, setOpenAddDialog] = useState(false);
-  const [openAddTableDialog, setOpenAddTableDialog] = useState(false);
-  const [newDbName, setNewDbName] = useState<string>('');
-  const [newTableName, setNewTableName] = useState<string>('');
-  const [dataType, setDataType] = useState<'primary' | 'foreign' | 'data'>('primary');
-  const [openAddFieldDialog, setOpenAddFieldDialog] = useState(false);
-  const [newFieldName, setNewFieldName] = useState('');
-  const [newFieldType, setNewFieldType] = useState('');
-  const [newFieldRequired, setNewFieldRequired] = useState(false);
-  const [newFieldDefaultValue, setNewFieldDefaultValue] = useState('');
-  const [newFieldUnique, setNewFieldUnique] = useState(false);
+
+  const handleEditField = (field: Field) => {
+    setEditingField(field);
+  };
 
   useEffect(() => {
     const fetchTableData = async () => {
@@ -75,16 +81,25 @@ export default function Db() {
 
       try {
         setTableLoading(true);
-        const result = await window.electron.db.tables.query({
+        setFieldLoading(true);
+        const tableResult = await window.electron.db.tables.query({
           name: selectedTable
         });
-        if (result.success) {
-          dispatch(setQueryResult(result.data));
+        if (tableResult.success) {
+          dispatch(setQueryResult(tableResult.data));
+        }
+
+        const fieldsResult = await window.electron.db.fields.query({
+          table_name: selectedTable
+        });
+        if (fieldsResult.success) {
+          dispatch(setFieldList(fieldsResult.data));
         }
       } catch (err) {
         console.error('Failed to load table data:', err);
       } finally {
         setTableLoading(false);
+        setFieldLoading(false);
       }
     };
 
@@ -203,72 +218,44 @@ export default function Db() {
           <MenuItem onClick={() => { setDbAnchorEl(null); /* 删除操作 */ }}>删除</MenuItem>
         </Menu>
 
-        {/* 添加数据库对话框 */}
-        <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)}>
-          <DialogTitle>添加数据库</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="数据库名称"
-              fullWidth
-              variant="standard"
-              value={newDbName}
-              onChange={(e) => setNewDbName(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenAddDialog(false)}>取消</Button>
-            <Button onClick={handleAddDatabase}>确定</Button>
-          </DialogActions>
-        </Dialog>
+        <InputDialog
+          open={openAddDialog}
+          title="添加数据库"
+          label="数据库名称"
+          onClose={() => setOpenAddDialog(false)}
+          onSubmit={handleAddDatabase}
+        />
 
-        {/* 添加表对话框 */}
-        <Dialog open={openAddTableDialog} onClose={() => setOpenAddTableDialog(false)}>
-          <DialogTitle>添加表</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="表名称"
-              fullWidth
-              variant="standard"
-              value={newTableName}
-              onChange={(e) => setNewTableName(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenAddTableDialog(false)}>取消</Button>
-            <Button onClick={async () => {
-              try {
-                if (!selectedDb || !newTableName) return;
+        <InputDialog
+          open={openAddTableDialog}
+          title="添加表"
+          label="表名称"
+          onClose={() => dispatch(setOpenAddTableDialog(false))}
+          onSubmit={async (tableName) => {
+            try {
+              if (!selectedDb || !tableName) return;
 
-                // 获取当前选中的数据库ID
-                const selectedDbObj = databaseList.find(db => db.name === selectedDb);
-                if (!selectedDbObj) return;
+              const selectedDbObj = databaseList.find(db => db.name === selectedDb);
+              if (!selectedDbObj) return;
 
-                const result = await window.electron.db.tables.create({
-                  name: newTableName,
+              const result = await window.electron.db.tables.create({
+                name: tableName,
+                database_id: selectedDbObj.id
+              });
+
+              if (result.success) {
+                const tables = await window.electron.db.tables.query({
                   database_id: selectedDbObj.id
                 });
-
-                if (result.success) {
-                  setOpenAddTableDialog(false);
-                  setNewTableName('');
-                  // 刷新表列表
-                  const tables = await window.electron.db.tables.query({
-                    database_id: selectedDbObj.id
-                  });
-                  if (tables.success) {
-                    dispatch(setTableList(tables.data));
-                  }
+                if (tables.success) {
+                  dispatch(setTableList(tables.data));
                 }
-              } catch (err) {
-                console.error('Failed to add table:', err);
               }
-            }}>确定</Button>
-          </DialogActions>
-        </Dialog>
+            } catch (err) {
+              console.error('Failed to add table:', err);
+            }
+          }}
+        />
 
         <Divider orientation="vertical" flexItem />
 
@@ -321,6 +308,13 @@ export default function Db() {
           <Stack spacing={2}>
             {/* 数据类型选择 */}
             <Button
+              variant={dataType === 'data' ? 'contained' : 'outlined'}
+              onClick={() => dispatch(setDataType('data'))}
+              fullWidth
+            >
+              数据
+            </Button>
+            <Button
               variant={dataType === 'primary' ? 'contained' : 'outlined'}
               onClick={() => setDataType('primary')}
               fullWidth
@@ -334,114 +328,127 @@ export default function Db() {
             >
               外键
             </Button>
-            <Button
-              variant={dataType === 'data' ? 'contained' : 'outlined'}
-              onClick={() => setDataType('data')}
-              fullWidth
-            >
-              数据
-            </Button>
 
             <Divider />
 
-            {/* 表格操作按钮 */}
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={() => setOpenAddFieldDialog(true)}
-              fullWidth
-            >
-              添加字段
-            </Button>
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() => {
-                setNewFieldName('');
-                setNewFieldType('');
-                setNewFieldRequired(false);
-                setNewFieldDefaultValue('');
-                setNewFieldUnique(false);
-              }}
-              fullWidth
-            >
-              取消
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={async () => {
-                try {
-                  if (selectedTable) {
-                    const result = await window.electron.db.tables.update({
-                      name: selectedTable,
-                      fields: queryResult
-                    });
-                    if (result.success) {
-                      alert('修改保存成功');
-                    }
-                  }
-                } catch (err) {
-                  console.error('保存失败:', err);
-                  alert('保存失败');
-                }
-              }}
-              fullWidth
-            >
-              提交修改
-            </Button>
+            {/* 表格操作按钮 - 仅在选中表时显示 */}
+            {selectedTable && (
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => dispatch(setOpenAddFieldDialog(true))}
+                fullWidth
+              >
+                添加字段
+              </Button>
+            )}
           </Stack>
         </Box>
 
         {/* 添加字段对话框 */}
-        <Dialog open={openAddFieldDialog} onClose={() => setOpenAddFieldDialog(false)}>
-          <DialogTitle>添加字段</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="字段名称"
-              fullWidth
-              variant="standard"
-              value={newFieldName}
-              onChange={(e) => setNewFieldName(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenAddFieldDialog(false)}>取消</Button>
-            <Button onClick={async () => {
+        <AddFieldDialog
+          open={openAddFieldDialog && !editingField}
+          onClose={() => dispatch(setOpenAddFieldDialog(false))}
+          onSubmit={async (fieldData) => {
+            try {
+              if (!selectedTable || !fieldData.name) return;
+
+              const table = tableList.find(t => t.name === selectedTable);
+              if (!table) {
+                alert('找不到对应的表');
+                return;
+              }
+
+              let result;
+              if (fieldData.dataType === 'primary') {
+                result = await window.electron.db.fields.create({
+                  name: fieldData.name,
+                  table_id: table.id,
+                  type: "int",
+                  primary: 1,
+                  auto_increment: 1
+                });
+              } else {
+                result = await window.electron.db.fields.create({
+                  name: fieldData.name,
+                  table_id: table.id,
+                  type: fieldData.type || "string",
+                  not_null: fieldData.required ? 1 : 0,
+                  default: fieldData.defaultValue,
+                  unique: fieldData.unique ? 1 : 0,
+                  primary: 0,
+                  auto_increment: 0
+                });
+              }
+              if (result.success) {
+                // 刷新字段列表
+                const fieldsResult = await window.electron.db.fields.query({
+                  where: {
+                    table_id: table.id
+                  }
+                });
+                if (fieldsResult.success) {
+                  dispatch(setFieldList(fieldsResult.data));
+                }
+              } else {
+                alert('字段添加失败: ' + result.message);
+              }
+            } catch (err) {
+              console.error('添加字段失败:', err);
+            }
+          }}
+          fieldList={fieldList}
+        />
+
+        {/* 编辑字段对话框 */}
+        {editingField && (
+          <AddFieldDialog
+            open={true}
+            onClose={() => setEditingField(null)}
+            onSubmit={async (fieldData) => {
               try {
-                if (!selectedTable || !newFieldName) return;
+                if (!selectedTable || !fieldData.name) return;
 
-                const newField = {
-                  name: newFieldName,
-                  type: 'TEXT', // 默认类型
-                  primaryKey: dataType === 'primary',
-                  foreignKey: dataType === 'foreign'
-                };
+                const table = tableList.find(t => t.name === selectedTable);
+                if (!table) return;
 
-                const result = await window.electron.db.tables.addField({
-                  tableName: selectedTable,
-                  field: newField
+                const result = await window.electron.db.fields.update({
+                  id: editingField.id,
+                  name: fieldData.name,
+                  type: fieldData.type || "string",
+                  not_null: fieldData.required ? 1 : 0,
+                  default: fieldData.defaultValue,
+                  unique: fieldData.unique ? 1 : 0
                 });
 
                 if (result.success) {
-                  setOpenAddFieldDialog(false);
-                  setNewFieldName('');
-                  // 刷新表数据
-                  const tableData = await window.electron.db.tables.query({
-                    name: selectedTable
+                  // 刷新字段列表
+                  const fieldsResult = await window.electron.db.fields.query({
+                    where: {
+                      table_id: table.id
+                    }
                   });
-                  if (tableData.success) {
-                    dispatch(setQueryResult(tableData.data));
+                  if (fieldsResult.success) {
+                    dispatch(setFieldList(fieldsResult.data));
                   }
                 }
               } catch (err) {
-                console.error('添加字段失败:', err);
+                console.error('更新字段失败:', err);
+              } finally {
+                setEditingField(null);
               }
-            }}>添加</Button>
-          </DialogActions>
-        </Dialog>
+            }}
+            fieldList={fieldList}
+            initialData={{
+              name: editingField.name,
+              type: editingField.type,
+              required: editingField.required,
+              defaultValue: editingField.defaultValue,
+              unique: editingField.unique,
+              dataType: editingField.primary ? 'primary' : 'data'
+            }}
+          />
+        )}
 
         {/* 表格内容 */}
         <TableContainer component={Paper} sx={{ flex: 1 }}>
@@ -453,32 +460,56 @@ export default function Db() {
             <Table stickyHeader aria-label="simple table">
               <TableHead>
                 <TableRow>
-                  <TableCell width="33%">域名</TableCell>
-                  <TableCell align="center">类型</TableCell>
-                  <TableCell align="center">非空</TableCell>
-                  <TableCell align="center">默认</TableCell>
-                  <TableCell align="center">唯一</TableCell>
+                  <TableCell width="30%">域名</TableCell>
+                  <TableCell align="center" width="20%">类型</TableCell>
+                  <TableCell align="center" width="10%">非空</TableCell>
+                  <TableCell align="center" width="10%">默认</TableCell>
+                  <TableCell align="center" width="10%">唯一</TableCell>
+                  <TableCell align="center" width="20%">操作</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {queryResult?.map((row: any) => {
+                {fieldList?.map((field, index) => {
                   // 根据数据类型过滤显示
-                  const showRow =
-                    (dataType === 'primary' && row.primaryKey) ||
-                    (dataType === 'foreign' && row.foreignKey) ||
-                    (dataType === 'data');
+                  const showField =
+                    (dataType === 'primary' && field.primary) ||
+                    (dataType === 'data' && !field.primary);
 
-                  if (!showRow) return null;
+                  if (!showField) return null;
 
                   return (
-                    <TableRow key={row.id}>
-                      <TableCell component="th" scope="row" width="33%">
-                        {row.name}
+                    <TableRow
+                      key={field.id}
+                      sx={{
+                        backgroundColor: (theme) =>
+                          index % 2 === 0
+                            ? theme.palette.background.default
+                            : theme.palette.action.hover
+                      }}
+                    >
+                      <TableCell component="th" scope="row" width="30%">
+                        {field.name}
                       </TableCell>
-                      <TableCell align="center">{row.type}</TableCell>
-                      <TableCell align="center">{row.notNull ? '是' : '否'}</TableCell>
-                      <TableCell align="center">{row.defaultValue || '-'}</TableCell>
-                      <TableCell align="center">{row.unique ? '是' : '否'}</TableCell>
+                      <TableCell width="20%" align="center">
+                        {field.type}
+                        {field.primary && <Chip label="主键" size="small" sx={{ ml: 1 }} />}
+                        {field.foreignKey && <Chip label="外键" size="small" sx={{ ml: 1 }} />}
+                      </TableCell>
+                      <TableCell width="10%" align="center">{field.required ? '是' : '否'}</TableCell>
+                      <TableCell width="10%" align="center">{field.defaultValue || '-'}</TableCell>
+                      <TableCell width="10%" align="center">{field.unique ? '是' : '否'}</TableCell>
+                      <TableCell width="20%" align="center">
+                        <IconButton size="small" onClick={() => handleEditField(field)}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteField(field)}
+                          disabled={field.primary} // 主键字段不允许删除
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </TableCell>
                     </TableRow>
                   );
                 })}

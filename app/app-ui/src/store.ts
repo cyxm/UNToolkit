@@ -1,11 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
-import counterReducer from '@/slices/counterSlice.js';
-import dbReducer from '@/slices/dbSlice.js';
+import dbReducer from '@/ui/page/home/db/dbSlice.js';
 
 export const store = configureStore({
   reducer: {
-    counter: counterReducer,
     db: dbReducer,
   },
 });

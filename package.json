@@ -12,6 +12,7 @@
         "test": "turbo run test",
         "release": "changeset publish",
         "rebuild": "electron-rebuild",
+        "prisma:clean": "npx prisma clean",
         "prisma:gen": "npx prisma generate",
         "prisma:pull": "npx prisma db pull"
     },
