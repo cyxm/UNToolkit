@@ -5,6 +5,7 @@ import Home from '@/ui/page/home/Home.js';
 import Cmd from '@/ui/page/home/cmd/Cmd.js';
 import Db from '@/ui/page/home/db/Db.js';
 import Api from '@/ui/page/home/api/Api.js';
+import Draw from '@/ui/page/home/draw/Draw.js';
 
 export const router = createBrowserRouter([
   {
@@ -30,6 +31,10 @@ export const router = createBrowserRouter([
           {
             path: 'api',
             element: <Api />
+          },
+          {
+            path: 'draw',
+            element: <Draw />
           }
         ]
       }

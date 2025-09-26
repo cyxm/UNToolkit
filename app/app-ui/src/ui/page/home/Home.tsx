@@ -55,21 +55,21 @@ export default function Home() {
                             <ListSubheader>基础功能</ListSubheader>
                             <ListItem
                                 component={Button}
-                                onClick={() => navigate('cmd')}
-                            >
-                                <ListItemIcon>
-                                    <GridOnIcon />
-                                </ListItemIcon>
-                                <ListItemText primary="命令行管理" />
-                            </ListItem>
-                            <ListItem
-                                component={Button}
                                 onClick={() => navigate('db')}
                             >
                                 <ListItemIcon>
                                     <StorageIcon />
                                 </ListItemIcon>
                                 <ListItemText primary="DB设计" />
+                            </ListItem>
+                            <ListItem
+                                component={Button}
+                                onClick={() => navigate('cmd')}
+                            >
+                                <ListItemIcon>
+                                    <GridOnIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="命令行管理" />
                             </ListItem>
                             <ListItem
                                 component={Button}
@@ -80,12 +80,21 @@ export default function Home() {
                                 </ListItemIcon>
                                 <ListItemText primary="API调用" />
                             </ListItem>
+                            <ListItem
+                                component={Button}
+                                onClick={() => navigate('draw')}
+                            >
+                                <ListItemIcon>
+                                    <BarChartIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="绘图" />
+                            </ListItem>
                         </List>
                     </Box>
                 </Panel>
                 <PanelResizeHandle className="resize-handle" />
                 <Panel>
-                    <Box sx={{ 
+                    <Box sx={{
                         height: '100%',
                         backgroundColor: '#f5f9ff' // 更淡的蓝色背景
                     }}>
