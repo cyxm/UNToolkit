@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface Database {
+export interface Database {
   id: number;
   name: string;
 }
@@ -10,13 +10,13 @@ interface QueryResult {
   [key: string]: any;
 }
 
-interface Table {
+export interface Table {
   id: number;
   name: string;
   database_id: number;
 }
 
-interface Field {
+export interface Field {
   id: number;                  // 保留原有的id属性（通常为数据库自增主键）
   name?: string | null;        // 从fieldsCreateInput对应，允许为string或null
   type: string;                // 保持必填，与fieldsCreateInput一致
@@ -31,7 +31,7 @@ interface Field {
   enable?: boolean | null;     // 新增：对应启用状态（1为true，0为false）
 }
 
-interface DbState {
+export interface DbState {
   loading: boolean; // 全局加载状态
   queryResult: QueryResult | null; // 查询结果
   dbReadStatus: 'unread' | 'read'; // 数据库读取状态
