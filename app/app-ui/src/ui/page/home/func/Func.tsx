@@ -10,22 +10,23 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
+import type { ElectronAPI } from "@un/tool-protocol/electron_api"
 
 declare global {
   interface Window {
     electron: {
       api: {
-        getApiEndpoints: () => Promise<Array<{id: string, name: string}>>;
+        getApiEndpoints: () => Promise<Array<{ id: string, name: string }>>;
         callApi: (endpoint: string, params: string) => Promise<any>;
       };
     };
   }
 }
 
-export default function Api() {
+export default function Func() {
   const [endpoint, setEndpoint] = useState('');
   const [loading, setLoading] = useState(true);
-  const [endpoints, setEndpoints] = useState<Array<{id: string, name: string}>>([]);
+  const [endpoints, setEndpoints] = useState<Array<{ id: string, name: string }>>([]);
   const [error, setError] = useState<string | null>(null);
   const [apiResult, setApiResult] = useState<any>(null);
 

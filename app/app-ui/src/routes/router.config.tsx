@@ -4,7 +4,7 @@ import App from '@/ui/page/app/App.js';
 import Home from '@/ui/page/home/Home.js';
 import Cmd from '@/ui/page/home/cmd/Cmd.js';
 import Db from '@/ui/page/home/db/Db.js';
-import Api from '@/ui/page/home/api/Api.js';
+import Api from '@/ui/page/home/func/Func.js';
 import Draw from '@/ui/page/home/draw/Draw.js';
 
 export const router = createBrowserRouter([
