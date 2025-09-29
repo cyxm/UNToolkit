@@ -15,7 +15,7 @@ import {
   Checkbox,
   Button
 } from '@mui/material';
-import { Field } from '@/ui/page/home/db/dbSlice.js';
+import { Field } from '@/ui/page/home/db/DbSlice.js';
 
 interface AddFieldDialogProps {
   open: boolean;

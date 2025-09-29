@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, useAppDispatch } from '@/store.js';
+import { setPageState, PageState } from './FuncSlice.js';
 import {
   Box,
   Stack,
@@ -12,68 +15,32 @@ import {
 } from '@mui/material';
 import type { ElectronAPI } from "@un/tool-protocol/electron_api"
 
-declare global {
-  interface Window {
-    electron: {
-      api: {
-        getApiEndpoints: () => Promise<Array<{ id: string, name: string }>>;
-        callApi: (endpoint: string, params: string) => Promise<any>;
-      };
-    };
-  }
-}
-
 export default function Func() {
-  const [endpoint, setEndpoint] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [endpoints, setEndpoints] = useState<Array<{ id: string, name: string }>>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [apiResult, setApiResult] = useState<any>(null);
+  const dispatch = useAppDispatch();
+  const {
+    pageState,
+  } = useSelector((state: RootState) => state.func);
 
+  // 初始化
   useEffect(() => {
-    const fetchEndpoints = async () => {
+    const init = async () => {
       try {
-        const eps = await window.electron.api.getApiEndpoints();
-        setEndpoints(eps);
-        setLoading(false);
+        dispatch(setPageState(PageState.loading));
+
+        dispatch(setPageState(PageState.loaded));
       } catch (err) {
         console.error('获取API端点失败:', err);
-        setError('获取API端点失败');
-        setLoading(false);
+        dispatch(setPageState(PageState.loaded));
       }
     };
 
-    fetchEndpoints();
+    init();
   }, []);
 
-  const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setEndpoint(event.target.value as string);
-  };
-
-  const handleApiCall = async (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' && endpoint) {
-      try {
-        const result = await window.electron.api.callApi(endpoint, (event.target as HTMLInputElement).value);
-        setApiResult(result);
-      } catch (err) {
-        console.error('调用API失败:', err);
-        setError('调用API失败');
-      }
-    }
-  };
-
-  if (loading) {
+  if (pageState === PageState.loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <Alert severity="error">{error}</Alert>
       </Box>
     );
   }

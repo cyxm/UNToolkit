@@ -1,13 +1,13 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+
+export enum PageState {
+  loading,
+  loaded
+}
 
 export interface Database {
   id: number;
   name: string;
-}
-
-interface QueryResult {
-  // 根据实际查询结果结构定义
-  [key: string]: any;
 }
 
 export interface Table {
@@ -32,65 +32,40 @@ export interface Field {
 }
 
 export interface DbState {
-  loading: boolean; // 全局加载状态
-  queryResult: QueryResult | null; // 查询结果
-  dbReadStatus: 'unread' | 'read'; // 数据库读取状态
-  databaseList: Database[]; // 数据库列表
+  // 页面状态
+  pageState: PageState;
+  // 当前选中的数据库
+  selectedDb: Database | null;
+  // 数据库列表
+  databaseList: Database[];
+
   tableList: Table[]; // 表列表
   fieldList: Field[]; // 字段列表
-  selectedDb: string; // 当前选中的数据库
   selectedTable: string; // 当前选中的表
   selectedFields: string[]; // 当前选中的字段
-  tablesLoading: boolean; // 表加载状态
-  tableLoading: boolean; // 单个表加载状态
-  fieldLoading: boolean; // 字段加载状态
-  dbAnchorEl: HTMLElement | null; // 数据库菜单锚点元素
-  tableAnchorEl: HTMLElement | null; // 表菜单锚点元素
-  dataType: 'primary' | 'foreign' | 'data'; // 当前显示的数据类型
-  openAddFieldDialog: boolean; // 是否打开添加字段对话框
-  editingField: Field | null; // 正在编辑的字段
-  fieldToDelete: Field | null; // 待删除的字段
-  openAddDialog: boolean; // 是否打开添加数据库对话框
-  openAddTableDialog: boolean; // 是否打开添加表对话框
 }
 
 const initialState: DbState = {
-  loading: false,
-  queryResult: null,
-  dbReadStatus: 'unread',
+  pageState: PageState.loading,
   databaseList: [],
   tableList: [],
   fieldList: [],
-  selectedDb: '',
+  selectedDb: null,
   selectedTable: '',
   selectedFields: [],
-  tablesLoading: false,
-  tableLoading: false,
-  fieldLoading: false,
-  dbAnchorEl: null,
-  tableAnchorEl: null,
-  dataType: 'data',
-  openAddFieldDialog: false,
-  editingField: null,
-  fieldToDelete: null,
-  openAddDialog: false,
-  openAddTableDialog: false,
 };
 
 export const dbSlice = createSlice({
   name: 'db',
   initialState,
   reducers: {
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.loading = action.payload;
-    },
-    setQueryResult: (state, action: PayloadAction<QueryResult | null>) => {
-      state.queryResult = action.payload;
+    setPageState: (state, action: PayloadAction<PageState>) => {
+      state.pageState = action.payload;
     },
     setDatabaseList: (state, action: PayloadAction<Database[]>) => {
       state.databaseList = action.payload;
     },
-    setSelectedDb: (state, action: PayloadAction<string>) => {
+    setSelectedDb: (state, action: PayloadAction<Database>) => {
       state.selectedDb = action.payload;
     },
     setSelectedTable: (state, action: PayloadAction<string>) => {
@@ -99,55 +74,79 @@ export const dbSlice = createSlice({
     setTableList: (state, action: PayloadAction<Table[]>) => {
       state.tableList = action.payload;
     },
-    setTablesLoading: (state, action: PayloadAction<boolean>) => {
-      state.tablesLoading = action.payload;
-    },
     setFieldList: (state, action: PayloadAction<Field[]>) => {
       state.fieldList = action.payload;
     },
     setSelectedFields: (state, action: PayloadAction<string[]>) => {
       state.selectedFields = action.payload;
     },
-    setTableLoading: (state, action: PayloadAction<boolean>) => {
-      state.tableLoading = action.payload;
-    },
-    setFieldLoading: (state, action: PayloadAction<boolean>) => {
-      state.fieldLoading = action.payload;
-    },
-    setDataType: (state, action: PayloadAction<'primary' | 'foreign' | 'data'>) => {
-      state.dataType = action.payload;
-    },
-    setOpenAddFieldDialog: (state, action: PayloadAction<boolean>) => {
-      state.openAddFieldDialog = action.payload;
-    },
-    setEditingField: (state, action: PayloadAction<Field | null>) => {
-      state.editingField = action.payload;
-    },
-    setFieldToDelete: (state, action: PayloadAction<Field | null>) => {
-      state.fieldToDelete = action.payload;
-    },
-    setOpenAddDialog: (state, action: PayloadAction<boolean>) => {
-      state.openAddDialog = action.payload;
-    },
-    setOpenAddTableDialog: (state, action: PayloadAction<boolean>) => {
-      state.openAddTableDialog = action.payload;
-    },
   },
 });
 
 export const {
-  setLoading,
-  setQueryResult,
+  setPageState,
   setDatabaseList,
   setSelectedDb,
   setSelectedTable,
   setTableList,
-  setTablesLoading,
   setFieldList,
   setSelectedFields,
-  setOpenAddTableDialog,
-  setOpenAddFieldDialog,
-  setDataType
 } = dbSlice.actions;
+
+// 添加异步thunk处理数据库初始化
+export const initializeDatabase = createAsyncThunk(
+  'db/initializeDatabase',
+  async (_, { dispatch }) => {
+    try {
+      dispatch(setPageState(PageState.loading));
+      const result = await window.electron.db.databases.query();
+      if (result.success) {
+        dispatch(setDatabaseList(result.data.map((db: any) => ({
+          id: db.id,
+          name: db.name,
+        }))));
+      }
+    } catch (err) {
+      console.error('读取数据库失败:', err);
+    } finally {
+      dispatch(setPageState(PageState.loaded));
+    }
+  }
+);
+
+// 添加异步thunk处理数据库变化
+export const handleDatabaseChange = createAsyncThunk(
+  'db/handleDatabaseChange',
+  async (dbId: number, { dispatch, getState }) => {
+    const state: any = getState();
+    const databaseList = state.db.databaseList;
+
+    // 根据ID找到对应的数据库名称
+    const selectedDbObj = databaseList.find((db: any) => db.id === dbId);
+
+    dispatch(setSelectedDb(selectedDbObj));
+    dispatch(setSelectedTable(''));
+
+    if (!dbId) {
+      dispatch(setTableList([]));
+      return;
+    }
+
+    try {
+      const result = await window.electron.db.databases.query({
+        where: { id: dbId }
+      });
+      if (result.success) {
+        dispatch(setTableList(result.data.map((table: any) => ({
+          id: table.id,
+          name: table.name,
+          database_id: table.database_id
+        }))));
+      }
+    } catch (err) {
+      console.error('Failed to load tables:', err);
+    }
+  }
+);
 
 export default dbSlice.reducer;

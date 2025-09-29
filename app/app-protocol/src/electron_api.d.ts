@@ -121,10 +121,7 @@ export interface ElectronAPI {
         };
     };
 
-    api: {
-
-        getApiEndpoints: () => void;
-        callApi: (endpoint: any, params: any) => void;
+    func: {
     };
 
     window: {

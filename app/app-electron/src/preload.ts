@@ -34,9 +34,7 @@ const electronAPI: ElectronAPI = {
             delete: async (id: number) => await ipcRenderer.invoke('fields:delete', id)
         }
     },
-    api: {
-        getApiEndpoints: async () => await ipcRenderer.invoke('api:getEndpoints'),
-        callApi: async (endpoint: any, params: any) => await ipcRenderer.invoke('api:call', endpoint, params)
+    func: {
     },
     window: {
         min: function (): void {

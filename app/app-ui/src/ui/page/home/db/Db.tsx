@@ -1,20 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, useAppDispatch } from '@/store.js';
 import {
-  setLoading,
-  setQueryResult,
-  setDatabaseList,
-  setSelectedDb,
   setSelectedTable,
   setTableList,
-  setTablesLoading,
   setFieldList,
-  setSelectedFields,
-  setOpenAddTableDialog,
-  setOpenAddFieldDialog,
-  setDataType
-} from './dbSlice.js';
+  PageState,
+  handleDatabaseChange,
+  initializeDatabase,
+} from './DbSlice.js';
 import {
   Box,
   Stack,
@@ -44,108 +38,27 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddFieldDialog from './AddFieldDialog.js';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import type { ElectronAPI } from "@un/tool-protocol/electron_api"
 
 export default function Db() {
   const dispatch = useAppDispatch();
   const {
-    loading,
-    queryResult,
-    dbReadStatus,
+    pageState,
     databaseList,
     tableList,
     fieldList,
     selectedDb,
     selectedTable,
-    selectedFields,
-    tablesLoading,
-    tableLoading,
-    fieldLoading,
-    dbAnchorEl,
-    tableAnchorEl,
-    dataType,
-    openAddFieldDialog,
-    editingField,
-    fieldToDelete,
-    openAddDialog,
-    openAddTableDialog
   } = useSelector((state: RootState) => state.db);
 
-  const handleEditField = (field: Field) => {
-    setEditingField(field);
-  };
+  const anchorDb = useRef(null);
 
+  // 初始化
   useEffect(() => {
-    const fetchTableData = async () => {
-      if (!selectedTable) return;
-
-      try {
-        setTableLoading(true);
-        setFieldLoading(true);
-        const tableResult = await window.electron.db.tables.query({
-          name: selectedTable
-        });
-        if (tableResult.success) {
-          dispatch(setQueryResult(tableResult.data));
-        }
-
-        const fieldsResult = await window.electron.db.fields.query({
-          table_name: selectedTable
-        });
-        if (fieldsResult.success) {
-          dispatch(setFieldList(fieldsResult.data));
-        }
-      } catch (err) {
-        console.error('Failed to load table data:', err);
-      } finally {
-        setTableLoading(false);
-        setFieldLoading(false);
-      }
-    };
-
-    fetchTableData();
-  }, [selectedTable]);
-
-  const handleAddDatabase = async () => {
-    try {
-      console.log(newDbName);
-      const result = await window.electron.db.databases.create({
-        name: newDbName
-      });
-      if (result.success) {
-        setOpenAddDialog(false);
-        setNewDbName('');
-        // 刷新数据库列表
-        const dbs = await window.electron.db.databases.query();
-        console.log('Databases:', dbs);
-      }
-    } catch (err) {
-      console.error('Failed to create database:', err);
-    }
-  };
-
-  useEffect(() => {
-    const initDb = async () => {
-      try {
-        dispatch(setLoading(true));
-        const result = await window.electron.db.databases.query();
-        if (result.success) {
-          dispatch(setDatabaseList(result.data.map((db: any) => ({
-            id: db.id,
-            name: db.name
-          }))));
-        }
-      } catch (err) {
-        console.error('Failed to load databases:', err);
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-
-    initDb();
+    dispatch(initializeDatabase());
   }, []);
 
-  if (loading) {
+  // 载入页面
+  if (pageState === PageState.loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         <CircularProgress />
@@ -156,75 +69,61 @@ export default function Db() {
   return (
     <Stack spacing={2} direction="column" sx={{ flexGrow: 1, height: '100%', p: 2 }}>
       <Stack direction="row" spacing={2} sx={{ width: '100%', alignItems: 'center' }}>
-        {/* 库操作 */}
+        {/* 数据库选择 */}
         <FormControl sx={{ flex: 1 }}>
           <InputLabel>数据库</InputLabel>
           <Select
             label="数据库"
-            onChange={async (e) => {
-              const dbName = e.target.value as string;
-              dispatch(setSelectedDb(dbName));
-              dispatch(setSelectedTable(''));
-
-              if (!dbName) {
-                dispatch(setTableList([]));
-                return;
-              }
-
-              // 获取选中数据库的ID
-              const selectedDbObj = databaseList.find(db => db.name === dbName);
-              if (!selectedDbObj) return;
-
-              try {
-                dispatch(setTablesLoading(true));
-                const result = await window.electron.db.tables.query({
-                  database_id: selectedDbObj.id
-                });
-                if (result.success) {
-                  dispatch(setTableList(result.data));
-                }
-              } catch (err) {
-                console.error('Failed to load tables:', err);
-              } finally {
-                dispatch(setTablesLoading(false));
-              }
-            }}
+            onChange={(e) => dispatch(handleDatabaseChange(e.target.value as number))}
           >
             <MenuItem value="">-- 请选择 --</MenuItem>
             {databaseList.map(db => (
-              <MenuItem key={db.id} value={db.name}>
+              <MenuItem key={db.id} value={db.id}>
                 {db.name}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
 
+        {/* 数据库操作菜单 */}
         <IconButton
+          ref={anchorDb}
           aria-label="database actions"
-          onClick={(e) => setDbAnchorEl(e.currentTarget)}
           sx={{ height: 24, width: 24 }}
+          onClick={(e) => {
+            dispatch(setDbMenuState(true));
+            dispatch(setDbMenuAnchor(e.currentTarget));
+          }}
         >
           <MoreVertIcon />
         </IconButton>
         <Menu
-          anchorEl={dbAnchorEl}
-          open={Boolean(dbAnchorEl)}
-          onClose={() => setDbAnchorEl(null)}
+          anchorEl={anchorDb.current}
+          open={dbMenuState}
+          onClose={() => {
+            dispatch(setDbMenuState(false));
+          }}
         >
           <MenuItem onClick={() => {
-            setDbAnchorEl(null);
-            setOpenAddDialog(true);
-          }}>添加</MenuItem>
-          <MenuItem onClick={() => { setDbAnchorEl(null); /* 删除操作 */ }}>删除</MenuItem>
+            dispatch(setDbMenuState(false));
+            // dispatch(setOpenAddDialog(true));
+          }}>
+            添加
+          </MenuItem>
+          <MenuItem onClick={() => {
+            dispatch(setDbMenuState(false));
+          }}>
+            删除
+          </MenuItem>
         </Menu>
 
-        <InputDialog
+        {/* <InputDialog
           open={openAddDialog}
           title="添加数据库"
           label="数据库名称"
           onClose={() => setOpenAddDialog(false)}
-          onSubmit={handleAddDatabase}
-        />
+          onSubmit={}
+        /> */}
 
         <InputDialog
           open={openAddTableDialog}

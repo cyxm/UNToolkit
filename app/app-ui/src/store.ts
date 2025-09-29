@@ -1,10 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
-import dbReducer from '@/ui/page/home/db/dbSlice.js';
+import dbReducer from '@/ui/page/home/db/DbSlice.js';
+import funcReducer from '@/ui/page/home/func/FuncSlice.js';
 
 export const store = configureStore({
   reducer: {
     db: dbReducer,
+    func: funcReducer,
   },
 });
 

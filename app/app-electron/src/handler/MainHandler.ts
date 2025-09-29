@@ -158,7 +158,6 @@ async function handleQueryDatabases(params: Prisma.databasesFindManyArgs = { whe
         const databases = await prisma.databases.findMany({
             where: {
                 id: params.where?.id,
-                name: params.where?.name,
                 enable: params.where?.enable
             }
         });
