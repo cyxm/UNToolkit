@@ -135,16 +135,11 @@ async function handleCallApi(endpoint: string, params: string) {
 
 async function handleCreateDatabase(
     event: Electron.IpcMainInvokeEvent,
-    dbName: string,
-    version?: number
+    data: Prisma.databasesCreateInput
 ) {
     try {
         const database = await prisma.databases.create({
-            data: {
-                name: dbName,
-                version: version ?? 1,
-                enable: 1
-            }
+            data: data
         });
         return { success: true, id: database.id };
     } catch (err) {
@@ -182,6 +177,18 @@ async function handleUpdateDatabase(data: Prisma.databasesUpdateArgs) {
     } catch (err) {
         console.error('Failed to update database:', err);
         return { success: false, error: "Failed to update database" };
+    }
+}
+
+async function handleDeleteDatabase(event: Electron.IpcMainInvokeEvent, id: number) {
+    try {
+        const result = await prisma.databases.delete({
+            where: { id }
+        });
+        return { success: true, changes: 1 };
+    } catch (err) {
+        console.error('Failed to delete database:', err);
+        return { success: false, error: "Failed to delete database" };
     }
 }
 
@@ -249,17 +256,5 @@ async function handleDeleteTable(id: number) {
     } catch (err) {
         console.error('Failed to delete table:', err);
         return { success: false, error: "Failed to delete table" };
-    }
-}
-
-async function handleDeleteDatabase(id: number) {
-    try {
-        const result = await prisma.databases.delete({
-            where: { id }
-        });
-        return { success: true, changes: 1 };
-    } catch (err) {
-        console.error('Failed to delete database:', err);
-        return { success: false, error: "Failed to delete database" };
     }
 }

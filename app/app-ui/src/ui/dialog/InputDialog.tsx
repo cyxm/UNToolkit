@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -31,8 +31,13 @@ const InputDialog: React.FC<InputDialogProps> = ({
   cancelText = '取消',
   validate
 }) => {
-  const [value, setValue] = useState(initialValue);
+  const [value, setValue] = useState<string>(initialValue);
   const [error, setError] = useState<string | null>(null);
+
+  const textFieldRef = useRef<HTMLInputElement | null>(null);
+  const handleDialogEntered = () => {
+    textFieldRef.current?.focus();
+  };
 
   const handleSubmit = () => {
     if (validate) {
@@ -48,11 +53,10 @@ const InputDialog: React.FC<InputDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} slotProps={{ transition: { onEntered: handleDialogEntered } }}>
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <TextField
-          autoFocus
           margin="dense"
           label={label}
           fullWidth
@@ -64,6 +68,7 @@ const InputDialog: React.FC<InputDialogProps> = ({
           }}
           error={!!error}
           helperText={error}
+          inputRef={textFieldRef}
         />
       </DialogContent>
       <DialogActions>

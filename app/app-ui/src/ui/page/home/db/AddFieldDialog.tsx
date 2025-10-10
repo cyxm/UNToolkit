@@ -29,34 +29,40 @@ interface AddFieldDialogProps {
     dataType: 'primary' | 'foreign' | 'data';
   }) => void;
   fieldList: Field[];
+  initialData?: {
+    name: string;
+    type: string;
+    required: boolean;
+    defaultValue: string;
+    unique: boolean;
+    dataType: 'primary' | 'foreign' | 'data';
+  };
 }
 
 export default function AddFieldDialog({
   open,
   onClose,
   onSubmit,
-  fieldList
+  fieldList,
+  initialData
 }: AddFieldDialogProps) {
-  const [dataType, setDataType] = useState<'primary' | 'foreign' | 'data'>('data');
-  const [newFieldName, setNewFieldName] = useState('');
-  const [newFieldType, setNewFieldType] = useState('');
-  const [newFieldRequired, setNewFieldRequired] = useState(false);
-  const [newFieldDefaultValue, setNewFieldDefaultValue] = useState('');
-  const [newFieldUnique, setNewFieldUnique] = useState(false);
+  const [dataType, setDataType] = useState<'primary' | 'foreign' | 'data'>(initialData?.dataType || 'data');
+  const [newFieldName, setNewFieldName] = useState(initialData?.name || '');
+  const [newFieldType, setNewFieldType] = useState(initialData?.type || '');
+  const [newFieldRequired, setNewFieldRequired] = useState(initialData?.required || false);
+  const [newFieldDefaultValue, setNewFieldDefaultValue] = useState(initialData?.defaultValue || '');
+  const [newFieldUnique, setNewFieldUnique] = useState(initialData?.unique || false);
 
   useEffect(() => {
     if (open) {
-      const hasPrimaryKey = fieldList?.some(field => field.primary);
-      const hasIdField = fieldList?.some(field => field.name === 'id');
-      const type = hasPrimaryKey || hasIdField ? 'data' : 'primary';
-      setDataType(type);
-      setNewFieldName(type === 'primary' ? 'id' : '');
-      setNewFieldType('');
-      setNewFieldRequired(false);
-      setNewFieldDefaultValue('');
-      setNewFieldUnique(false);
+      setDataType(initialData?.dataType || 'data');
+      setNewFieldName(initialData?.name || '');
+      setNewFieldType(initialData?.type || '');
+      setNewFieldRequired(initialData?.required || false);
+      setNewFieldDefaultValue(initialData?.defaultValue || '');
+      setNewFieldUnique(initialData?.unique || false);
     }
-  }, [open, fieldList]);
+  }, [open, initialData]);
 
   const handleSubmit = () => {
     onSubmit({
@@ -72,23 +78,25 @@ export default function AddFieldDialog({
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>添加字段</DialogTitle>
+      <DialogTitle>{initialData ? '编辑字段' : '添加字段'}</DialogTitle>
       <DialogContent>
-        <RadioGroup
-          row
-          value={dataType}
-          onChange={(e) => setDataType(e.target.value as 'primary' | 'foreign' | 'data')}
-          sx={{ mb: 2 }}
-        >
-          <FormControlLabel value="data" control={<Radio />} label="数据" />
-          <FormControlLabel
-            value="primary"
-            control={<Radio />}
-            label="主键"
-            disabled={fieldList?.some(field => field.name === 'id' || field.primary)}
-          />
-          <FormControlLabel value="foreign" control={<Radio />} label="外键" />
-        </RadioGroup>
+        {!initialData && (
+          <RadioGroup
+            row
+            value={dataType}
+            onChange={(e) => setDataType(e.target.value as 'primary' | 'foreign' | 'data')}
+            sx={{ mb: 2 }}
+          >
+            <FormControlLabel value="data" control={<Radio />} label="数据" />
+            <FormControlLabel
+              value="primary"
+              control={<Radio />}
+              label="主键"
+              disabled={fieldList?.some(field => field.name === 'id' || field.isPrimary)}
+            />
+            <FormControlLabel value="foreign" control={<Radio />} label="外键" />
+          </RadioGroup>
+        )}
         <TextField
           autoFocus
           margin="dense"
@@ -145,7 +153,7 @@ export default function AddFieldDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>取消</Button>
-        <Button onClick={handleSubmit}>添加</Button>
+        <Button onClick={handleSubmit}>{initialData ? '更新' : '添加'}</Button>
       </DialogActions>
     </Dialog>
   );

@@ -17,22 +17,26 @@ export interface Table {
 }
 
 export interface Field {
-  id: number;                  // 保留原有的id属性（通常为数据库自增主键）
-  name?: string | null;        // 从fieldsCreateInput对应，允许为string或null
-  type: string;                // 保持必填，与fieldsCreateInput一致
-  table_id?: number | null;    // 从fieldsCreateInput对应，允许为number或null
-  required: boolean;           // 可基于not_null转换（1为true，0为false）
-  defaultValue?: string | null;// 对应default字段，允许为string或null
-  unique: boolean;             // 可基于unique转换（1为true，0为false）
-  primary?: boolean | null;    // 新增：对应primary字段（1为true，0为false）
-  auto_increment?: boolean | null; // 新增：对应auto_increment字段
-  create_time?: number | null; // 新增：对应创建时间戳
-  update_time?: number | null; // 新增：对应更新时间戳
-  enable?: boolean | null;     // 新增：对应启用状态（1为true，0为false）
+  id: number;
+  name?: string | null;
+  type: string;
+  table_id?: number | null;
+  not_null?: number | null; // 原始数据字段
+  required?: boolean; // 转换后的布尔值字段
+  default?: string | null;
+  defaultValue?: string | null; // 转换后的字段
+  unique?: number | null; // 原始数据字段
+  isUnique?: boolean; // 转换后的布尔值字段
+  primary?: number | null; // 原始数据字段
+  isPrimary?: boolean; // 转换后的布尔值字段
+  auto_increment?: number | null;
+  create_time?: number | null;
+  update_time?: number | null;
+  enable?: number | null;
 }
 
 export interface DbState {
-  // 页面状态
+  // 页面异步加载状态
   pageState: PageState;
   // 当前选中的数据库
   selectedDb: Database | null;
@@ -75,7 +79,14 @@ export const dbSlice = createSlice({
       state.tableList = action.payload;
     },
     setFieldList: (state, action: PayloadAction<Field[]>) => {
-      state.fieldList = action.payload;
+      // 转换字段数据以匹配组件期望的格式
+      state.fieldList = action.payload.map(field => ({
+        ...field,
+        required: field.not_null === 1,
+        defaultValue: field.default || undefined,
+        isUnique: field.unique === 1,
+        isPrimary: field.primary === 1
+      }));
     },
     setSelectedFields: (state, action: PayloadAction<string[]>) => {
       state.selectedFields = action.payload;
@@ -115,7 +126,7 @@ export const initializeDatabase = createAsyncThunk(
 );
 
 // 添加异步thunk处理数据库变化
-export const handleDatabaseChange = createAsyncThunk(
+export const selectDb = createAsyncThunk(
   'db/handleDatabaseChange',
   async (dbId: number, { dispatch, getState }) => {
     const state: any = getState();
@@ -133,8 +144,8 @@ export const handleDatabaseChange = createAsyncThunk(
     }
 
     try {
-      const result = await window.electron.db.databases.query({
-        where: { id: dbId }
+      const result = await window.electron.db.tables.query({
+        where: { database_id: dbId }
       });
       if (result.success) {
         dispatch(setTableList(result.data.map((table: any) => ({
@@ -145,6 +156,63 @@ export const handleDatabaseChange = createAsyncThunk(
       }
     } catch (err) {
       console.error('Failed to load tables:', err);
+    }
+  }
+);
+
+// 添加异步thunk处理数据库添加
+export const addDb = createAsyncThunk(
+  'db/addDb',
+  async (dbName: string, { dispatch }) => {
+    try {
+      const currentTime = Date.now();
+      const result = await window.electron.db.databases.create({
+        name: dbName,
+        version: 1,
+        create_time: currentTime,
+        update_time: currentTime,
+        enable: 1,
+      });
+
+      if (result.success) {
+        // 添加成功后重新初始化数据库列表
+        dispatch(initializeDatabase());
+        return result.id;
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (err) {
+      console.error('添加数据库失败:', err);
+      throw err;
+    }
+  }
+);
+
+// 添加异步thunk处理选中数据库删除
+export const deleteSelectDb = createAsyncThunk(
+  'db/deleteSelectDb',
+  async (_, { dispatch, getState }) => {
+    const state: any = getState();
+    const selectedDb = state.db.selectedDb;
+
+    // 检查是否有选中的数据库
+    if (!selectedDb) {
+      throw new Error('没有选中的数据库');
+    }
+
+    try {
+      const result = await window.electron.db.databases.delete(selectedDb.id);
+
+      if (result.success) {
+        // 删除成功后重新初始化数据库列表
+        dispatch(initializeDatabase());
+        return result.changes;
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (err) {
+      console.error('删除数据库失败:', err);
+      throw err;
     }
   }
 );
