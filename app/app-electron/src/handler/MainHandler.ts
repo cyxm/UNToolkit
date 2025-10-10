@@ -17,10 +17,12 @@ const mainHandlers = [
     { name: "databases:query", handle: handleQueryDatabases },
     { name: "databases:update", handle: handleUpdateDatabase },
     { name: "databases:delete", handle: handleDeleteDatabase },
+
     { name: "tables:create", handle: handleCreateTable },
     { name: "tables:query", handle: handleQueryTables },
     { name: "tables:update", handle: handleUpdateTable },
     { name: "tables:delete", handle: handleDeleteTable },
+
     { name: "fields:create", handle: handleCreateField },
     { name: "fields:query", handle: handleQueryFields },
     { name: "fields:update", handle: handleUpdateField },
@@ -212,16 +214,12 @@ async function handleCreateTable(
     }
 }
 
-async function handleQueryTables(params: Prisma.tablesFindManyArgs = { where: { enable: 1 } }) {
+async function handleQueryTables(
+    event: Electron.IpcMainInvokeEvent,
+    params: Prisma.tablesFindManyArgs
+) {
     try {
-        const tables = await prisma.tables.findMany({
-            where: {
-                id: params.where?.id,
-                name: params.where?.name,
-                enable: params.where?.enable,
-                database_id: params.where?.database_id
-            }
-        });
+        const tables = await prisma.tables.findMany(params);
         return { success: true, data: tables };
     } catch (err) {
         console.error('Failed to query tables:', err);
@@ -247,7 +245,10 @@ async function handleUpdateTable(data: Prisma.tablesUpdateArgs) {
     }
 }
 
-async function handleDeleteTable(id: number) {
+async function handleDeleteTable(
+    event: Electron.IpcMainInvokeEvent,
+    id: number
+) {
     try {
         const result = await prisma.tables.delete({
             where: { id }

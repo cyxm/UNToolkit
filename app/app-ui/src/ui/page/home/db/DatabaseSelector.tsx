@@ -28,24 +28,6 @@ export default function DatabaseSelector() {
   const [dbAddDialogState, setDbAddDialogState] = useState(false);
   const [dbDeleteDialogState, setDbDeleteDialogState] = useState(false);
 
-  const handleDeleteConfirm = async () => {
-    if (selectedDb) {
-      try {
-        const result = await window.electron.db.databases.delete(selectedDb.id);
-        if (result.success) {
-          // 如果删除成功，重新加载数据库列表
-          dispatch(selectDb(0)); // 重置选择
-        } else {
-          console.error('删除数据库失败:', result.error);
-        }
-      } catch (err) {
-        console.error('删除数据库异常:', err);
-      } finally {
-        setDbDeleteDialogState(false);
-      }
-    }
-  };
-
   return (
     <>
       <FormControl sx={{ flex: 1 }}>

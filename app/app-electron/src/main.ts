@@ -29,6 +29,7 @@ const createWindow = () => {
         transparent: false,
         // 窗口是否可移动
         movable: true,
+        show: false,
         // 只在macos下生效
         // 全屏
         simpleFullscreen: true

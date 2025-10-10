@@ -69,7 +69,7 @@ export const dbSlice = createSlice({
     setDatabaseList: (state, action: PayloadAction<Database[]>) => {
       state.databaseList = action.payload;
     },
-    setSelectedDb: (state, action: PayloadAction<Database>) => {
+    setSelectedDb: (state, action: PayloadAction<Database | null>) => {
       state.selectedDb = action.payload;
     },
     setSelectedTable: (state, action: PayloadAction<string>) => {
@@ -116,6 +116,7 @@ export const initializeDatabase = createAsyncThunk(
           id: db.id,
           name: db.name,
         }))));
+        dispatch(setSelectedDb(null));
       }
     } catch (err) {
       console.error('读取数据库失败:', err);
@@ -127,7 +128,7 @@ export const initializeDatabase = createAsyncThunk(
 
 // 添加异步thunk处理数据库变化
 export const selectDb = createAsyncThunk(
-  'db/handleDatabaseChange',
+  'db/selectDb',
   async (dbId: number, { dispatch, getState }) => {
     const state: any = getState();
     const databaseList = state.db.databaseList;
@@ -136,23 +137,39 @@ export const selectDb = createAsyncThunk(
     const selectedDbObj = databaseList.find((db: any) => db.id === dbId);
 
     dispatch(setSelectedDb(selectedDbObj));
-    dispatch(setSelectedTable(''));
+  }
+);
 
-    if (!dbId) {
+// 添加一个监听selectedDb变化的异步action
+export const loadTablesBySelectedDb = createAsyncThunk(
+  'db/loadTablesBySelectedDb',
+  async (_, { dispatch, getState }) => {
+    const state: any = getState();
+    const selectedDb = state.db.selectedDb;
+    console.log('数据库选择变动');
+
+    if (!selectedDb) {
+      console.log('未选择数据库');
       dispatch(setTableList([]));
+      dispatch(setSelectedTable(''));
       return;
     }
 
+    console.log('选择数据库:', selectedDb.name);
     try {
       const result = await window.electron.db.tables.query({
-        where: { database_id: dbId }
+        where: { database_id: selectedDb.id }
       });
+
       if (result.success) {
         dispatch(setTableList(result.data.map((table: any) => ({
           id: table.id,
           name: table.name,
           database_id: table.database_id
         }))));
+      } else {
+        dispatch(setTableList([]));
+        dispatch(setSelectedTable(''));
       }
     } catch (err) {
       console.error('Failed to load tables:', err);
@@ -212,6 +229,106 @@ export const deleteSelectDb = createAsyncThunk(
       }
     } catch (err) {
       console.error('删除数据库失败:', err);
+      throw err;
+    }
+  }
+);
+
+// 添加异步thunk处理表添加
+export const addTable = createAsyncThunk(
+  'db/addTable',
+  async (tableName: string, { dispatch, getState }) => {
+    try {
+      const state: any = getState();
+      const selectedDb = state.db.selectedDb;
+
+      // 检查是否有选中的数据库
+      if (!selectedDb) {
+        throw new Error('没有选中的数据库');
+      }
+
+      const currentTime = Date.now();
+      const result = await window.electron.db.tables.create({
+        name: tableName,
+        database_id: selectedDb.id,
+        version: 1,
+        create_time: currentTime,
+        update_time: currentTime,
+        enable: 1,
+      });
+
+      if (result.success) {
+        // 添加成功后重新加载表列表
+        const tableResult = await window.electron.db.tables.query({
+          where: { database_id: selectedDb.id }
+        });
+
+        if (tableResult.success) {
+          dispatch(setTableList(tableResult.data.map((table: any) => ({
+            id: table.id,
+            name: table.name,
+            database_id: table.database_id
+          }))));
+        }
+        return result.id;
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (err) {
+      console.error('添加表失败:', err);
+      throw err;
+    }
+  }
+);
+
+// 添加异步thunk处理选中表删除
+export const deleteSelectTable = createAsyncThunk(
+  'db/deleteSelectTable',
+  async (_, { dispatch, getState }) => {
+    const state: any = getState();
+    const selectedDb = state.db.selectedDb;
+    const selectedTable = state.db.selectedTable;
+    const tableList = state.db.tableList;
+
+    // 检查是否有选中的数据库和表
+    if (!selectedDb) {
+      throw new Error('没有选中的数据库');
+    }
+
+    if (!selectedTable) {
+      throw new Error('没有选中的表');
+    }
+
+    // 从表列表中找到选中的表
+    const table = tableList.find((t: any) => t.id == selectedTable);
+    if (!table) {
+      throw new Error('找不到选中的表');
+    }
+
+    try {
+      const result = await window.electron.db.tables.delete(table.id);
+
+      if (result.success) {
+        // 删除成功后重新加载表列表
+        const tableResult = await window.electron.db.tables.query({
+          where: { database_id: selectedDb.id }
+        });
+
+        if (tableResult.success) {
+          dispatch(setTableList(tableResult.data.map((t: any) => ({
+            id: t.id,
+            name: t.name,
+            database_id: t.database_id
+          }))));
+          // 清空选中的表
+          dispatch(setSelectedTable(''));
+        }
+        return result.changes;
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (err) {
+      console.error('删除表失败:', err);
       throw err;
     }
   }
