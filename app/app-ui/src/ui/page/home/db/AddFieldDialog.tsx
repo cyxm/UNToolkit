@@ -16,16 +16,17 @@ import {
   Button
 } from '@mui/material';
 import { Field, FieldType } from '@/ui/page/home/db/DbSlice.js';
+import { FieldEditorStartParam } from './DbSlice.js';
 
 interface AddFieldDialogProps {
-  open: boolean;
+  startParam: FieldEditorStartParam;
   onClose: () => void;
   onSubmit: (fieldData: Field) => void;
   fieldList: Field[];
 }
 
 export default function AddFieldDialog({
-  open,
+  startParam,
   onClose,
   onSubmit,
   fieldList,
@@ -51,10 +52,22 @@ export default function AddFieldDialog({
   const [dataType, setDataType] = useState<FieldType>(FieldType.Data);
 
   useEffect(() => {
-    if (open) {
-      setFieldData(initField);
+    if (startParam.open) {
+      if (startParam.field) {
+        setFieldData(startParam.field);
+        if (startParam.field.primary === 1) {
+          setDataType(FieldType.Primary);
+        } else if (startParam.field.name?.endsWith('_id')) {
+          setDataType(FieldType.Foreign);
+        } else {
+          setDataType(FieldType.Data);
+        }
+      } else {
+        setFieldData(initField);
+        setDataType(FieldType.Data);
+      }
     }
-  }, [open]);
+  }, [startParam]);
 
   useEffect(() => {
     if (dataType === FieldType.Primary) {
@@ -72,7 +85,7 @@ export default function AddFieldDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={startParam.open} onClose={onClose}>
       <DialogTitle>{'添加字段'}</DialogTitle>
       <DialogContent>
         <RadioGroup
@@ -83,14 +96,25 @@ export default function AddFieldDialog({
           }}
           sx={{ mb: 2 }}
         >
-          <FormControlLabel value={FieldType.Data} control={<Radio />} label="数据" />
+          <FormControlLabel
+            value={FieldType.Data}
+            control={<Radio />}
+            label="数据"
+            disabled={fieldData.id !== undefined} />
+
           <FormControlLabel
             value={FieldType.Primary}
             control={<Radio />}
             label="主键"
-            disabled={fieldList?.some(field => field.name === 'id' || field.primary)}
+            disabled={fieldData.id !== undefined || fieldList?.some(field => field.name === 'id' || field.primary)}
           />
-          <FormControlLabel value={FieldType.Foreign} control={<Radio />} label="外键" />
+
+          <FormControlLabel
+            value={FieldType.Foreign}
+            control={<Radio />}
+            label="外键"
+            disabled={fieldData.id !== undefined}
+          />
         </RadioGroup>
         <TextField
           autoFocus

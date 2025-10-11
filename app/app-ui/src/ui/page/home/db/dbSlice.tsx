@@ -6,6 +6,11 @@ export enum PageState {
   loaded
 }
 
+export interface FieldEditorStartParam {
+  open: boolean;
+  field: Field | null;
+}
+
 export enum FieldType {
   All = 'all',
   Data = 'data',
@@ -44,6 +49,9 @@ export interface DbState {
   fieldList: Field[];
   // 当前选中的字段筛选类型
   selectFieldType: FieldType;
+
+  // 字段编辑对话框
+  fieldEditorDialog: FieldEditorStartParam;
 }
 
 const initialState: DbState = {
@@ -53,7 +61,8 @@ const initialState: DbState = {
   fieldList: [],
   selectedDb: null,
   selectedTable: null,
-  selectFieldType: FieldType.All, // 默认字段类型为All
+  selectFieldType: FieldType.All,
+  fieldEditorDialog: { open: false, field: null },
 };
 
 export const dbSlice = createSlice({
@@ -81,6 +90,9 @@ export const dbSlice = createSlice({
     setSelectFieldType: (state, action: PayloadAction<FieldType>) => {
       state.selectFieldType = action.payload;
     },
+    setFieldEditorDialog: (state, action: PayloadAction<FieldEditorStartParam>) => {
+      state.fieldEditorDialog = action.payload;
+    },
   },
 });
 
@@ -92,6 +104,7 @@ export const {
   setTableList,
   setFieldList,
   setSelectFieldType,
+  setFieldEditorDialog,
 } = dbSlice.actions;
 
 // 添加异步thunk处理数据库初始化
@@ -187,6 +200,8 @@ export const loadFieldsBySelectedTable = createAsyncThunk(
         const result = await window.electron.db.fields.query({
           where: { table_id: selectedTable.id }
         });
+
+        console.log('表:', result);
 
         if (result.success) {
           dispatch(setFieldList(result.data));
@@ -359,9 +374,8 @@ export const deleteSelectTable = createAsyncThunk(
   }
 );
 
-// 添加异步thunk处理字段添加
-export const addField = createAsyncThunk(
-  'db/addField',
+export const addOrUpdateField = createAsyncThunk(
+  'db/addOrUpdateField',
   async (fieldData: Field, { dispatch, getState }) => {
     const state: any = getState();
     const { selectedTable } = state.db;
@@ -375,13 +389,26 @@ export const addField = createAsyncThunk(
       }
 
       const time = Date.now();
-      let finalData = {
-        ...fieldData,
-        table_id: selectedTable.id,
-        create_time: time,
-        update_time: time,
-      };
-      let result = await window.electron.db.fields.create(finalData);
+      let finalData;
+      let result;
+      if (fieldData.id) {
+        finalData = {
+          ...fieldData,
+          update_time: time,
+        };
+        result = await window.electron.db.fields.update({
+          where: { id: fieldData.id },
+          data: finalData
+        });
+      } else {
+        finalData = {
+          ...fieldData,
+          table_id: selectedTable.id,
+          create_time: time,
+          update_time: time,
+        };
+        result = await window.electron.db.fields.create(finalData);
+      }
 
       if (result.success) {
         // 刷新字段列表

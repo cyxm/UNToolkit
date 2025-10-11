@@ -1,22 +1,19 @@
 import React, { useState } from 'react';
 import { Box, Button, Stack, Divider } from '@mui/material';
 import { useSelector } from 'react-redux';
-import AddFieldDialog from './AddFieldDialog.js';
-import { setSelectFieldType, FieldType, addField } from './DbSlice.js';
+import { setSelectFieldType, FieldType, setFieldEditorDialog, } from './DbSlice.js';
 import { useAppDispatch } from '@/store.js';
 
 export default function FieldControlPanel() {
   const dispatch = useAppDispatch();
-  const { selectedTable, selectFieldType, fieldList } = useSelector((state: any) => state.db);
-
-  const [openAddFieldDialog, setOpenAddFieldDialog] = useState(false);
+  const { selectedTable, selectFieldType } = useSelector((state: any) => state.db);
 
   return (
     <Box sx={{ width: 160, p: 2 }}>
       <Stack spacing={2}>
         <Button
           variant={selectFieldType === FieldType.All ? 'contained' : 'outlined'}
-          onClick={() =>  dispatch(setSelectFieldType(FieldType.All))}
+          onClick={() => dispatch(setSelectFieldType(FieldType.All))}
           fullWidth
         >
           全部
@@ -49,22 +46,13 @@ export default function FieldControlPanel() {
           <Button
             variant="outlined"
             color="primary"
-            onClick={() => setOpenAddFieldDialog(true)}
+            onClick={() => dispatch(setFieldEditorDialog({ open: true, field: null }))}
             fullWidth
           >
             添加字段
           </Button>
         )}
       </Stack>
-
-      <AddFieldDialog
-        open={openAddFieldDialog}
-        onClose={() => setOpenAddFieldDialog(false)}
-        onSubmit={(fieldData) => {
-          dispatch(addField(fieldData));
-        }}
-        fieldList={fieldList}
-      />
     </Box>
   );
 }

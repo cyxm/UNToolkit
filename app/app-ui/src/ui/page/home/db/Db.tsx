@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '@/store.js';
-import { initializeDatabase, PageState, loadTablesBySelectedDb, loadFieldsBySelectedTable } from './DbSlice.js';
+import {
+  initializeDatabase,
+  PageState,
+  loadTablesBySelectedDb,
+  loadFieldsBySelectedTable,
+  setFieldEditorDialog,
+  addOrUpdateField
+} from './DbSlice.js';
 import {
   Box,
   Stack,
@@ -12,6 +19,7 @@ import DatabaseSelector from './DatabaseSelector.js';
 import TableSelector from './TableSelector.js';
 import FieldControlPanel from './FieldControlPanel.js';
 import FieldTable from './FieldTable.js';
+import AddFieldDialog from './AddFieldDialog.js';
 
 export default function Db() {
   const dispatch = useAppDispatch();
@@ -20,6 +28,8 @@ export default function Db() {
     pageState,
     selectedDb,
     selectedTable,
+    fieldEditorDialog,
+    fieldList,
   } = useSelector((state: any) => state.db);
 
   // 初始化
@@ -46,17 +56,28 @@ export default function Db() {
   }
 
   return (
-    <Stack spacing={2} direction="column" sx={{ flexGrow: 1, height: '100%', p: 2 }}>
-      <Stack direction="row" spacing={2} sx={{ width: '100%', alignItems: 'center' }}>
-        <DatabaseSelector />
-        <Divider orientation="vertical" flexItem />
-        <TableSelector />
+    <Box sx={{ height: '100%', display: 'flex' }}>
+      <Stack spacing={2} direction="column" sx={{ flexGrow: 1, height: '100%', p: 2 }}>
+        <Stack direction="row" spacing={2} sx={{ width: '100%', alignItems: 'center' }}>
+          <DatabaseSelector />
+          <Divider orientation="vertical" flexItem />
+          <TableSelector />
+        </Stack>
+
+        <Stack direction="row" sx={{ flexGrow: 1, height: '100%' }}>
+          <FieldControlPanel />
+          <FieldTable />
+        </Stack>
       </Stack>
 
-      <Stack direction="row" sx={{ flexGrow: 1, height: '100%' }}>
-        <FieldControlPanel />
-        <FieldTable />
-      </Stack>
-    </Stack>
+      <AddFieldDialog
+        startParam={fieldEditorDialog}
+        onClose={() => dispatch(setFieldEditorDialog({ open: false, field: null }))}
+        onSubmit={(fieldData) => {
+          dispatch(addOrUpdateField(fieldData));
+        }}
+        fieldList={fieldList}
+      />
+    </Box>
   );
 }

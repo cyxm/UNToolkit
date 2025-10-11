@@ -60,20 +60,12 @@ async function handleQueryFields(
     }
 }
 
-async function handleUpdateField(data: Prisma.fieldsUpdateArgs) {
+async function handleUpdateField(
+    event: Electron.IpcMainInvokeEvent,
+    data: Prisma.fieldsUpdateArgs
+) {
     try {
-        const result = await prisma.fields.update({
-            where: { id: data.where?.id },
-            data: {
-                name: data.data?.name,
-                type: data.data?.type,
-                primary: data.data?.primary,
-                not_null: data.data?.not_null,
-                default: data.data?.default,
-                unique: data.data?.unique,
-                enable: data.data?.enable
-            }
-        });
+        const result = await prisma.fields.update(data);
         return { success: true, changes: 1 };
     } catch (err) {
         console.error('Failed to update field:', err);
