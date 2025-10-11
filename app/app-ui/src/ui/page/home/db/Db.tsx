@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '@/store.js';
-import { initializeDatabase, PageState, loadTablesBySelectedDb } from './DbSlice.js';
+import { initializeDatabase, PageState, loadTablesBySelectedDb, loadFieldsBySelectedTable } from './DbSlice.js';
 import {
   Box,
   Stack,
@@ -10,7 +10,8 @@ import {
 } from '@mui/material';
 import DatabaseSelector from './DatabaseSelector.js';
 import TableSelector from './TableSelector.js';
-import FieldEditor from './FieldEditor.js';
+import FieldControlPanel from './FieldControlPanel.js';
+import FieldTable from './FieldTable.js';
 
 export default function Db() {
   const dispatch = useAppDispatch();
@@ -18,17 +19,22 @@ export default function Db() {
   const {
     pageState,
     selectedDb,
+    selectedTable,
   } = useSelector((state: any) => state.db);
+
+  // 初始化
+  useEffect(() => {
+    dispatch(initializeDatabase());
+  }, []);
 
   // 监听selectedDb变化，重新加载tableList
   useEffect(() => {
     dispatch(loadTablesBySelectedDb());
   }, [selectedDb, dispatch]);
 
-  // 初始化
   useEffect(() => {
-    dispatch(initializeDatabase());
-  }, []);
+    dispatch(loadFieldsBySelectedTable());
+  }, [selectedTable, dispatch]);
 
   // 载入页面
   if (pageState === PageState.loading) {
@@ -48,7 +54,8 @@ export default function Db() {
       </Stack>
 
       <Stack direction="row" sx={{ flexGrow: 1, height: '100%' }}>
-        <FieldEditor />
+        <FieldControlPanel />
+        <FieldTable />
       </Stack>
     </Stack>
   );

@@ -20,8 +20,8 @@ export default function TableSelector() {
   const dispatch = useAppDispatch();
 
   // 从Redux store中获取tableList和selectedTable
-  const { tableList, selectedTable, selectedDb } = useSelector((state: any) => state.db);
-  
+  const { tableList, selectedTable } = useSelector((state: any) => state.db);
+
   // 菜单锚点
   const anchorTable = useRef(null);
 
@@ -30,8 +30,16 @@ export default function TableSelector() {
   const [tableAddDialogState, setTableAddDialogState] = useState(false);
   const [tableDeleteDialogState, setTableDeleteDialogState] = useState(false);
 
-  // 获取选中的表对象
-  const selectedTableObj = tableList.find((table: any) => table.id == selectedTable);
+  // 处理表选择变化
+  const handleTableChange = (event: any) => {
+    const tableId = event.target.value;
+    if (tableId === '') {
+      dispatch(setSelectedTable(null));
+    } else {
+      const selectedTableObj = tableList.find((table: any) => table.id === tableId);
+      dispatch(setSelectedTable(selectedTableObj || null));
+    }
+  };
 
   return (
     <>
@@ -39,8 +47,8 @@ export default function TableSelector() {
         <InputLabel>表</InputLabel>
         <Select
           label="表"
-          value={selectedTable}
-          onChange={(e) => dispatch(setSelectedTable(e.target.value as string))}
+          value={selectedTable?.id || ''}
+          onChange={handleTableChange}
         >
           <MenuItem value="">-- 请选择 --</MenuItem>
           {tableList.map((table: any) => (
@@ -74,7 +82,7 @@ export default function TableSelector() {
           添加
         </MenuItem>
 
-        <MenuItem 
+        <MenuItem
           onClick={() => {
             setTableMenuState(false);
             if (selectedTable) {
@@ -107,7 +115,7 @@ export default function TableSelector() {
       <ConfirmDialog
         open={tableDeleteDialogState}
         title="确认删除"
-        content={`确定要删除表 "${selectedTableObj?.name}" 吗？此操作不可撤销。`}
+        content={`确定要删除表 "${selectedTable?.name}" 吗？此操作不可撤销。`}
         onConfirm={async () => {
           try {
             await dispatch(deleteSelectTable());

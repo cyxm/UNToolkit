@@ -14,30 +14,13 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Field } from './DbSlice.js';
+import { Field, FieldType, deleteField } from './DbSlice.js';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from '@/store.js';
 
-interface FieldTableProps {
-  fieldList: Field[];
-  dataType: string;
-  tableLoading: boolean;
-  onEditField: (field: Field) => void;
-  onDeleteField: (field: Field) => void;
-}
-
-export default function FieldTable({
-  fieldList,
-  dataType,
-  tableLoading,
-  onEditField,
-  onDeleteField,
-}: FieldTableProps) {
-  if (tableLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+export default function FieldTable() {
+  const { fieldList, selectFieldType } = useSelector((state: any) => state.db);
+  const dispatch = useAppDispatch();
 
   return (
     <TableContainer component={Paper} sx={{ flex: 1 }}>
@@ -53,12 +36,22 @@ export default function FieldTable({
           </TableRow>
         </TableHead>
         <TableBody>
-          {fieldList?.map((field, index) => {
-            // 根据数据类型过滤显示
-            const showField =
-              (dataType === 'primary' && field.isPrimary) ||
-              (dataType === 'foreign' && field.isPrimary) || // 暂时使用primary字段表示foreign key
-              (dataType === 'data' && !field.isPrimary);
+          {fieldList?.map((field: Field, index: number) => {
+            let showField = false;
+            switch (selectFieldType) {
+              case FieldType.Data:
+                showField = field.primary !== 1;
+                break;
+              case FieldType.Primary:
+                showField = field.primary === 1;
+                break;
+              case FieldType.Foreign:
+                showField = !!field.name?.endsWith('_id');
+                break;
+              default:
+                showField = true;
+                break;
+            }
 
             if (!showField) return null;
 
@@ -77,19 +70,26 @@ export default function FieldTable({
                 </TableCell>
                 <TableCell width="20%" align="center">
                   {field.type}
-                  {field.isPrimary && <Chip label="主键" size="small" sx={{ ml: 1 }} />}
+                  {field.primary && <Chip label="主键" size="small" sx={{ ml: 1 }} />}
                 </TableCell>
-                <TableCell width="10%" align="center">{field.required ? '是' : '否'}</TableCell>
-                <TableCell width="10%" align="center">{field.defaultValue || '-'}</TableCell>
-                <TableCell width="10%" align="center">{field.isUnique ? '是' : '否'}</TableCell>
+                <TableCell width="10%" align="center">{field.not_null ? '是' : '否'}</TableCell>
+                <TableCell width="10%" align="center">{field.default || '-'}</TableCell>
+                <TableCell width="10%" align="center">{field.unique ? '是' : '否'}</TableCell>
                 <TableCell width="20%" align="center">
-                  <IconButton size="small" onClick={() => onEditField(field)}>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      // 编辑字段的逻辑将在FieldControlPanel中处理
+                      console.log('编辑字段:', field);
+                    }}
+                  >
                     <EditIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     size="small"
-                    onClick={() => onDeleteField(field)}
-                    disabled={!!field.isPrimary} // 主键字段不允许删除
+                    onClick={() => {
+                      dispatch(deleteField(field.id ?? 0));
+                    }}
                   >
                     <DeleteIcon fontSize="small" />
                   </IconButton>

@@ -1,8 +1,16 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { Prisma } from '@prisma/client';
 
 export enum PageState {
   loading,
   loaded
+}
+
+export enum FieldType {
+  All = 'all',
+  Data = 'data',
+  Primary = 'primary',
+  Foreign = 'foreign'
 }
 
 export interface Database {
@@ -16,37 +24,26 @@ export interface Table {
   database_id: number;
 }
 
-export interface Field {
-  id: number;
-  name?: string | null;
-  type: string;
-  table_id?: number | null;
-  not_null?: number | null; // 原始数据字段
-  required?: boolean; // 转换后的布尔值字段
-  default?: string | null;
-  defaultValue?: string | null; // 转换后的字段
-  unique?: number | null; // 原始数据字段
-  isUnique?: boolean; // 转换后的布尔值字段
-  primary?: number | null; // 原始数据字段
-  isPrimary?: boolean; // 转换后的布尔值字段
-  auto_increment?: number | null;
-  create_time?: number | null;
-  update_time?: number | null;
-  enable?: number | null;
-}
+export interface Field extends Prisma.fieldsUncheckedCreateInput { }
 
 export interface DbState {
   // 页面异步加载状态
   pageState: PageState;
-  // 当前选中的数据库
-  selectedDb: Database | null;
+
   // 数据库列表
   databaseList: Database[];
+  // 当前选中的数据库
+  selectedDb: Database | null;
 
-  tableList: Table[]; // 表列表
-  fieldList: Field[]; // 字段列表
-  selectedTable: string; // 当前选中的表
-  selectedFields: string[]; // 当前选中的字段
+  // 表列表
+  tableList: Table[];
+  // 当前选中的表
+  selectedTable: Table | null;
+
+  // 字段列表
+  fieldList: Field[];
+  // 当前选中的字段筛选类型
+  selectFieldType: FieldType;
 }
 
 const initialState: DbState = {
@@ -55,8 +52,8 @@ const initialState: DbState = {
   tableList: [],
   fieldList: [],
   selectedDb: null,
-  selectedTable: '',
-  selectedFields: [],
+  selectedTable: null,
+  selectFieldType: FieldType.All, // 默认字段类型为All
 };
 
 export const dbSlice = createSlice({
@@ -72,24 +69,17 @@ export const dbSlice = createSlice({
     setSelectedDb: (state, action: PayloadAction<Database | null>) => {
       state.selectedDb = action.payload;
     },
-    setSelectedTable: (state, action: PayloadAction<string>) => {
+    setSelectedTable: (state, action: PayloadAction<Table | null>) => {
       state.selectedTable = action.payload;
     },
     setTableList: (state, action: PayloadAction<Table[]>) => {
       state.tableList = action.payload;
     },
     setFieldList: (state, action: PayloadAction<Field[]>) => {
-      // 转换字段数据以匹配组件期望的格式
-      state.fieldList = action.payload.map(field => ({
-        ...field,
-        required: field.not_null === 1,
-        defaultValue: field.default || undefined,
-        isUnique: field.unique === 1,
-        isPrimary: field.primary === 1
-      }));
+      state.fieldList = action.payload;
     },
-    setSelectedFields: (state, action: PayloadAction<string[]>) => {
-      state.selectedFields = action.payload;
+    setSelectFieldType: (state, action: PayloadAction<FieldType>) => {
+      state.selectFieldType = action.payload;
     },
   },
 });
@@ -101,7 +91,7 @@ export const {
   setSelectedTable,
   setTableList,
   setFieldList,
-  setSelectedFields,
+  setSelectFieldType,
 } = dbSlice.actions;
 
 // 添加异步thunk处理数据库初始化
@@ -151,7 +141,7 @@ export const loadTablesBySelectedDb = createAsyncThunk(
     if (!selectedDb) {
       console.log('未选择数据库');
       dispatch(setTableList([]));
-      dispatch(setSelectedTable(''));
+      dispatch(setSelectedTable(null));
       return;
     }
 
@@ -169,10 +159,46 @@ export const loadTablesBySelectedDb = createAsyncThunk(
         }))));
       } else {
         dispatch(setTableList([]));
-        dispatch(setSelectedTable(''));
+        dispatch(setSelectedTable(null));
       }
     } catch (err) {
       console.error('Failed to load tables:', err);
+    }
+  }
+);
+
+// 添加异步thunk处理表变化时加载字段
+export const loadFieldsBySelectedTable = createAsyncThunk(
+  'db/loadFieldsBySelectedTable',
+  async (_, { dispatch, getState }) => {
+    const state: any = getState();
+    const selectedDb = state.db.selectedDb;
+    const selectedTable = state.db.selectedTable;
+    console.log('表选择变动');
+
+    if (!selectedDb || !selectedTable) {
+      dispatch(setFieldList([]));
+      return;
+    }
+
+    try {
+      if (selectedTable) {
+        console.log('选择表:', selectedTable.id);
+        const result = await window.electron.db.fields.query({
+          where: { table_id: selectedTable.id }
+        });
+
+        if (result.success) {
+          dispatch(setFieldList(result.data));
+        } else {
+          dispatch(setFieldList([]));
+        }
+      } else {
+        dispatch(setFieldList([]));
+      }
+    } catch (err) {
+      console.error('Failed to load fields:', err);
+      dispatch(setFieldList([]));
     }
   }
 );
@@ -300,13 +326,12 @@ export const deleteSelectTable = createAsyncThunk(
     }
 
     // 从表列表中找到选中的表
-    const table = tableList.find((t: any) => t.id == selectedTable);
-    if (!table) {
+    if (!selectedTable) {
       throw new Error('找不到选中的表');
     }
 
     try {
-      const result = await window.electron.db.tables.delete(table.id);
+      const result = await window.electron.db.tables.delete(selectedTable.id);
 
       if (result.success) {
         // 删除成功后重新加载表列表
@@ -321,7 +346,7 @@ export const deleteSelectTable = createAsyncThunk(
             database_id: t.database_id
           }))));
           // 清空选中的表
-          dispatch(setSelectedTable(''));
+          dispatch(setSelectedTable(null));
         }
         return result.changes;
       } else {
@@ -329,6 +354,90 @@ export const deleteSelectTable = createAsyncThunk(
       }
     } catch (err) {
       console.error('删除表失败:', err);
+      throw err;
+    }
+  }
+);
+
+// 添加异步thunk处理字段添加
+export const addField = createAsyncThunk(
+  'db/addField',
+  async (fieldData: Field, { dispatch, getState }) => {
+    const state: any = getState();
+    const { selectedTable } = state.db;
+
+    try {
+      if (!selectedTable || !fieldData.name) return;
+
+      if (!selectedTable) {
+        console.warn('找不到对应的表');
+        return;
+      }
+
+      const time = Date.now();
+      let finalData = {
+        ...fieldData,
+        table_id: selectedTable.id,
+        create_time: time,
+        update_time: time,
+      };
+      let result = await window.electron.db.fields.create(finalData);
+
+      if (result.success) {
+        // 刷新字段列表
+        const fieldsResult = await window.electron.db.fields.query({
+          where: {
+            table_id: selectedTable.id
+          }
+        });
+        if (fieldsResult.success) {
+          dispatch(setFieldList(fieldsResult.data));
+        }
+      } else {
+        console.warn('字段添加失败: ' + result.error);
+      }
+
+      return result;
+    } catch (err) {
+      console.error('添加字段失败:', err);
+      throw err;
+    }
+  }
+);
+
+// 添加异步thunk处理字段删除
+export const deleteField = createAsyncThunk(
+  'db/deleteField',
+  async (fieldId: number, { dispatch, getState }) => {
+    const state: any = getState();
+    const { selectedTable } = state.db;
+
+    try {
+      // 检查是否有选中的表
+      if (!selectedTable) {
+        throw new Error('没有选中的表');
+      }
+
+      // 删除字段
+      const result = await window.electron.db.fields.delete(fieldId);
+
+      if (result.success) {
+        // 删除成功后重新加载字段列表
+        const fieldsResult = await window.electron.db.fields.query({
+          where: {
+            table_id: selectedTable.id
+          }
+        });
+
+        if (fieldsResult.success) {
+          dispatch(setFieldList(fieldsResult.data));
+        }
+        return result.changes;
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (err) {
+      console.error('删除字段失败:', err);
       throw err;
     }
   }

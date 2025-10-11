@@ -29,6 +29,8 @@ model fields {
   not_null       Int?
   unique         Int?
   default        String?
+  is_index       Int?
+  ex_foreign     Int?
 }
 
 model tables {

@@ -1,44 +1,43 @@
-import React from 'react';
-import {
-  Box,
-  Stack,
-  Button,
-  Divider,
-} from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Button, Stack, Divider } from '@mui/material';
+import { useSelector } from 'react-redux';
+import AddFieldDialog from './AddFieldDialog.js';
+import { setSelectFieldType, FieldType, addField } from './DbSlice.js';
+import { useAppDispatch } from '@/store.js';
 
-interface FieldControlPanelProps {
-  dataType: string;
-  selectedTable: string;
-  onDataTypeChange: (dataType: string) => void;
-  onAddField: () => void;
-}
+export default function FieldControlPanel() {
+  const dispatch = useAppDispatch();
+  const { selectedTable, selectFieldType, fieldList } = useSelector((state: any) => state.db);
 
-export default function FieldControlPanel({
-  dataType,
-  selectedTable,
-  onDataTypeChange,
-  onAddField,
-}: FieldControlPanelProps) {
+  const [openAddFieldDialog, setOpenAddFieldDialog] = useState(false);
+
   return (
     <Box sx={{ width: 160, p: 2 }}>
       <Stack spacing={2}>
         <Button
-          variant={dataType === 'data' ? 'contained' : 'outlined'}
-          onClick={() => onDataTypeChange('data')}
+          variant={selectFieldType === FieldType.All ? 'contained' : 'outlined'}
+          onClick={() =>  dispatch(setSelectFieldType(FieldType.All))}
+          fullWidth
+        >
+          全部
+        </Button>
+        <Button
+          variant={selectFieldType === FieldType.Data ? 'contained' : 'outlined'}
+          onClick={() => dispatch(setSelectFieldType(FieldType.Data))}
           fullWidth
         >
           数据
         </Button>
         <Button
-          variant={dataType === 'primary' ? 'contained' : 'outlined'}
-          onClick={() => onDataTypeChange('primary')}
+          variant={selectFieldType === FieldType.Primary ? 'contained' : 'outlined'}
+          onClick={() => dispatch(setSelectFieldType(FieldType.Primary))}
           fullWidth
         >
           主键
         </Button>
         <Button
-          variant={dataType === 'foreign' ? 'contained' : 'outlined'}
-          onClick={() => onDataTypeChange('foreign')}
+          variant={selectFieldType === FieldType.Foreign ? 'contained' : 'outlined'}
+          onClick={() => dispatch(setSelectFieldType(FieldType.Foreign))}
           fullWidth
         >
           外键
@@ -50,13 +49,22 @@ export default function FieldControlPanel({
           <Button
             variant="outlined"
             color="primary"
-            onClick={onAddField}
+            onClick={() => setOpenAddFieldDialog(true)}
             fullWidth
           >
             添加字段
           </Button>
         )}
       </Stack>
+
+      <AddFieldDialog
+        open={openAddFieldDialog}
+        onClose={() => setOpenAddFieldDialog(false)}
+        onSubmit={(fieldData) => {
+          dispatch(addField(fieldData));
+        }}
+        fieldList={fieldList}
+      />
     </Box>
   );
 }

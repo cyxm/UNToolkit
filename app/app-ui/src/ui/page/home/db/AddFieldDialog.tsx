@@ -15,28 +15,13 @@ import {
   Checkbox,
   Button
 } from '@mui/material';
-import { Field } from '@/ui/page/home/db/DbSlice.js';
+import { Field, FieldType } from '@/ui/page/home/db/DbSlice.js';
 
 interface AddFieldDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (fieldData: {
-    name: string;
-    type: string;
-    required: boolean;
-    defaultValue: string;
-    unique: boolean;
-    dataType: 'primary' | 'foreign' | 'data';
-  }) => void;
+  onSubmit: (fieldData: Field) => void;
   fieldList: Field[];
-  initialData?: {
-    name: string;
-    type: string;
-    required: boolean;
-    defaultValue: string;
-    unique: boolean;
-    dataType: 'primary' | 'foreign' | 'data';
-  };
 }
 
 export default function AddFieldDialog({
@@ -44,76 +29,87 @@ export default function AddFieldDialog({
   onClose,
   onSubmit,
   fieldList,
-  initialData
 }: AddFieldDialogProps) {
-  const [dataType, setDataType] = useState<'primary' | 'foreign' | 'data'>(initialData?.dataType || 'data');
-  const [newFieldName, setNewFieldName] = useState(initialData?.name || '');
-  const [newFieldType, setNewFieldType] = useState(initialData?.type || '');
-  const [newFieldRequired, setNewFieldRequired] = useState(initialData?.required || false);
-  const [newFieldDefaultValue, setNewFieldDefaultValue] = useState(initialData?.defaultValue || '');
-  const [newFieldUnique, setNewFieldUnique] = useState(initialData?.unique || false);
+
+  const initField = {
+    id: undefined,
+    create_time: undefined,
+    update_time: undefined,
+    enable: 1,
+    name: '',
+    table_id: undefined,
+    type: '',
+    primary: 0,
+    auto_increment: 0,
+    not_null: 0,
+    unique: 0,
+    default: '',
+    is_index: 0,
+    ex_foreign: 0,
+  }
+  const [fieldData, setFieldData] = useState<Field>(initField);
+  const [dataType, setDataType] = useState<FieldType>(FieldType.Data);
 
   useEffect(() => {
     if (open) {
-      setDataType(initialData?.dataType || 'data');
-      setNewFieldName(initialData?.name || '');
-      setNewFieldType(initialData?.type || '');
-      setNewFieldRequired(initialData?.required || false);
-      setNewFieldDefaultValue(initialData?.defaultValue || '');
-      setNewFieldUnique(initialData?.unique || false);
+      setFieldData(initField);
     }
-  }, [open, initialData]);
+  }, [open]);
+
+  useEffect(() => {
+    if (dataType === FieldType.Primary) {
+      setFieldData({ ...fieldData, name: 'id', primary: 1, auto_increment: 1, type: 'int' });
+    } else {
+      setFieldData({ ...fieldData, name: '', primary: 0, auto_increment: 0 });
+    }
+  }, [dataType]);
 
   const handleSubmit = () => {
     onSubmit({
-      name: newFieldName,
-      type: newFieldType,
-      required: newFieldRequired,
-      defaultValue: newFieldDefaultValue,
-      unique: newFieldUnique,
-      dataType
+      ...fieldData
     });
     onClose();
   };
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>{initialData ? '编辑字段' : '添加字段'}</DialogTitle>
+      <DialogTitle>{'添加字段'}</DialogTitle>
       <DialogContent>
-        {!initialData && (
-          <RadioGroup
-            row
-            value={dataType}
-            onChange={(e) => setDataType(e.target.value as 'primary' | 'foreign' | 'data')}
-            sx={{ mb: 2 }}
-          >
-            <FormControlLabel value="data" control={<Radio />} label="数据" />
-            <FormControlLabel
-              value="primary"
-              control={<Radio />}
-              label="主键"
-              disabled={fieldList?.some(field => field.name === 'id' || field.isPrimary)}
-            />
-            <FormControlLabel value="foreign" control={<Radio />} label="外键" />
-          </RadioGroup>
-        )}
+        <RadioGroup
+          row
+          value={dataType}
+          onChange={(e) => {
+            setDataType(e.target.value as FieldType);
+          }}
+          sx={{ mb: 2 }}
+        >
+          <FormControlLabel value={FieldType.Data} control={<Radio />} label="数据" />
+          <FormControlLabel
+            value={FieldType.Primary}
+            control={<Radio />}
+            label="主键"
+            disabled={fieldList?.some(field => field.name === 'id' || field.primary)}
+          />
+          <FormControlLabel value={FieldType.Foreign} control={<Radio />} label="外键" />
+        </RadioGroup>
         <TextField
           autoFocus
           margin="dense"
           label="字段名称"
           fullWidth
           variant="standard"
-          value={newFieldName}
-          onChange={(e) => setNewFieldName(e.target.value)}
+          value={fieldData.name || ''}
+          onChange={(e) => { setFieldData({ ...fieldData, name: e.target.value }) }}
         />
-        {dataType === 'data' && (
+
+        {dataType === FieldType.Data && (
           <>
             <FormControl fullWidth margin="dense">
               <InputLabel>类型</InputLabel>
               <Select
-                value={newFieldType}
+                value={fieldData.type || ''}
                 label="类型"
-                onChange={(e) => setNewFieldType(e.target.value as string)}
+                onChange={(e) => { setFieldData({ ...fieldData, type: e.target.value }) }}
               >
                 <MenuItem value="string">字符串</MenuItem>
                 <MenuItem value="int">整数</MenuItem>
@@ -125,8 +121,8 @@ export default function AddFieldDialog({
             <FormControlLabel
               control={
                 <Checkbox
-                  checked={newFieldRequired}
-                  onChange={(e) => setNewFieldRequired(e.target.checked)}
+                  checked={fieldData.not_null === 1}
+                  onChange={() => { setFieldData({ ...fieldData, not_null: fieldData.not_null === 1 ? 0 : 1 }) }}
                 />
               }
               label="非空"
@@ -136,14 +132,13 @@ export default function AddFieldDialog({
               label="默认值"
               fullWidth
               variant="standard"
-              value={newFieldDefaultValue}
-              onChange={(e) => setNewFieldDefaultValue(e.target.value)}
+              onChange={(e) => { setFieldData({ ...fieldData, default: e.target.value }) }}
             />
             <FormControlLabel
               control={
                 <Checkbox
-                  checked={newFieldUnique}
-                  onChange={(e) => setNewFieldUnique(e.target.checked)}
+                  checked={fieldData.unique === 1}
+                  onChange={() => { setFieldData({ ...fieldData, unique: fieldData.unique === 1 ? 0 : 1 }) }}
                 />
               }
               label="唯一"
@@ -153,7 +148,7 @@ export default function AddFieldDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>取消</Button>
-        <Button onClick={handleSubmit}>{initialData ? '更新' : '添加'}</Button>
+        <Button onClick={handleSubmit}>添加</Button>
       </DialogActions>
     </Dialog>
   );

@@ -35,13 +35,7 @@ async function handleCreateField(
 ) {
     try {
         const field = await prisma.fields.create({
-            data: {
-                ...data,
-                primary: data.primary ?? 0,
-                not_null: data.not_null ?? 0,
-                unique: data.unique ?? 0,
-                enable: data.enable ?? 1
-            }
+            data: data
         });
         return { success: true, id: field.id };
     } catch (err) {
@@ -50,14 +44,12 @@ async function handleCreateField(
     }
 }
 
-async function handleQueryFields(params: Prisma.fieldsFindManyArgs) {
+async function handleQueryFields(
+    event: Electron.IpcMainInvokeEvent,
+    params: Prisma.fieldsFindManyArgs
+) {
     try {
-        const fields = await prisma.fields.findMany({
-            where: {
-                table_id: params.where?.table_id,
-                enable: params.where?.enable
-            }
-        });
+        const fields = await prisma.fields.findMany(params);
         return {
             success: true,
             data: fields
@@ -89,7 +81,10 @@ async function handleUpdateField(data: Prisma.fieldsUpdateArgs) {
     }
 }
 
-async function handleDeleteField(id: number) {
+async function handleDeleteField(
+    event: Electron.IpcMainInvokeEvent,
+    id: number
+) {
     try {
         const result = await prisma.fields.delete({
             where: { id }
@@ -200,12 +195,7 @@ async function handleCreateTable(
 ) {
     try {
         const table = await prisma.tables.create({
-            data: {
-                name: data.name,
-                database_id: data.database_id,
-                version: data.version ?? 1,
-                enable: data.enable ?? 1
-            }
+            data: data
         });
         return { success: true, id: table.id };
     } catch (err) {

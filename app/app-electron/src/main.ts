@@ -51,7 +51,7 @@ const createWindow = () => {
         mainWindow?.show();      // 显示窗口
     });
     // 开发工具
-    // mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools()
 }
 
 app.whenReady().then(
