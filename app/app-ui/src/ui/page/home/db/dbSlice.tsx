@@ -113,7 +113,9 @@ export const initializeDatabase = createAsyncThunk(
   async (_, { dispatch }) => {
     try {
       dispatch(setPageState(PageState.loading));
-      const result = await window.electron.db.databases.query();
+      const result = await window.electron.db.databases.query({
+        where: { type: 0 }
+      });
       if (result.success) {
         dispatch(setDatabaseList(result.data.map((db: any) => ({
           id: db.id,
@@ -230,6 +232,7 @@ export const addDb = createAsyncThunk(
         create_time: currentTime,
         update_time: currentTime,
         enable: 1,
+        type: 0,
       });
 
       if (result.success) {

@@ -14,6 +14,7 @@ model databases {
   update_time Float?
   enable      Int?
   name        String?
+  type        Int?
 }
 
 model fields {
@@ -41,4 +42,12 @@ model tables {
   enable      Int?
   name        String?
   database_id Int?
+}
+
+model dict {
+  id         Int     @id @default(autoincrement())
+  table_name String?
+  field_name String?
+  enum       Int?
+  comment    String?
 }

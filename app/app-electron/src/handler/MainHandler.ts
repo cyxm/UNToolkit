@@ -137,14 +137,12 @@ async function handleCreateDatabase(
     }
 }
 
-async function handleQueryDatabases(params: Prisma.databasesFindManyArgs = { where: { enable: 1 } }) {
+async function handleQueryDatabases(
+    event: Electron.IpcMainInvokeEvent,
+    params: Prisma.databasesFindManyArgs
+) {
     try {
-        const databases = await prisma.databases.findMany({
-            where: {
-                id: params.where?.id,
-                enable: params.where?.enable
-            }
-        });
+        const databases = await prisma.databases.findMany(params);
         return { success: true, data: databases };
     } catch (err) {
         console.error('Failed to query databases:', err);
@@ -152,7 +150,10 @@ async function handleQueryDatabases(params: Prisma.databasesFindManyArgs = { whe
     }
 }
 
-async function handleUpdateDatabase(data: Prisma.databasesUpdateArgs) {
+async function handleUpdateDatabase(
+    event: Electron.IpcMainInvokeEvent,
+    data: Prisma.databasesUpdateArgs
+) {
     try {
         const result = await prisma.databases.update({
             where: { id: data.where?.id },

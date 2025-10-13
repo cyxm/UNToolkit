@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, } from 'react';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '@/store.js';
 import {
@@ -17,7 +17,6 @@ import {
 } from '@mui/material';
 import DatabaseSelector from './DatabaseSelector.js';
 import TableSelector from './TableSelector.js';
-import FieldControlPanel from './FieldControlPanel.js';
 import FieldTable from './FieldTable.js';
 import AddFieldDialog from './AddFieldDialog.js';
 import FieldFunc from './FieldFunc.js';
