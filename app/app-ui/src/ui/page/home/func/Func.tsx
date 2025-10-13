@@ -13,7 +13,6 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
-import type { ElectronAPI } from "@un/tool-protocol/electron_api"
 
 export default function Func() {
   const dispatch = useAppDispatch();

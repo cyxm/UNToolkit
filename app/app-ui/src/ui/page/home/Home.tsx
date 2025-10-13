@@ -62,15 +62,7 @@ export default function Home() {
                                 </ListItemIcon>
                                 <ListItemText primary="DB设计" />
                             </ListItem>
-                            <ListItem
-                                component={Button}
-                                onClick={() => navigate('cmd')}
-                            >
-                                <ListItemIcon>
-                                    <GridOnIcon />
-                                </ListItemIcon>
-                                <ListItemText primary="命令行管理" />
-                            </ListItem>
+
                             <ListItem
                                 component={Button}
                                 onClick={() => navigate('api')}
@@ -80,6 +72,17 @@ export default function Home() {
                                 </ListItemIcon>
                                 <ListItemText primary="API调用" />
                             </ListItem>
+
+                            <ListItem
+                                component={Button}
+                                onClick={() => navigate('cmd')}
+                            >
+                                <ListItemIcon>
+                                    <GridOnIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="命令行管理" />
+                            </ListItem>
+
                             <ListItem
                                 component={Button}
                                 onClick={() => navigate('draw')}

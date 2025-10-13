@@ -18,52 +18,8 @@ import {
 } from '@mui/material';
 import { Field, FieldType } from '@/ui/page/home/db/DbSlice.js';
 import { FieldEditorStartParam } from './DbSlice.js';
+import { TemplateType, Template, templates } from './DbTemplate.js';
 
-// 模板定义
-interface Template {
-  name: string;
-  type: FieldType;
-  fieldType?: string;
-  notNull?: boolean;
-  unique?: boolean;
-  defaultValue?: string;
-}
-
-const templates: Template[] = [
-  {
-    name: '基本信息',
-    type: FieldType.Data,
-    fieldType: 'string',
-    notNull: false,
-    unique: false,
-    defaultValue: ''
-  },
-  {
-    name: '主键',
-    type: FieldType.Primary,
-    fieldType: 'int'
-  },
-  {
-    name: '外键',
-    type: FieldType.Foreign,
-    fieldType: 'int',
-    notNull: true
-  },
-  {
-    name: '创建时间',
-    type: FieldType.Data,
-    fieldType: 'datetime',
-    notNull: true,
-    defaultValue: 'CURRENT_TIMESTAMP'
-  },
-  {
-    name: '更新时间',
-    type: FieldType.Data,
-    fieldType: 'datetime',
-    notNull: true,
-    defaultValue: 'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
-  }
-];
 
 interface AddFieldDialogProps {
   startParam: FieldEditorStartParam;
@@ -98,11 +54,11 @@ export default function AddFieldDialog({
 
   const [fieldData, setFieldData] = useState<Field>(initField);
   const [dataType, setDataType] = useState<FieldType>(FieldType.Data);
-  const [templateId, setTemplateId] = useState<number>(0);
+  const [templateId, setTemplateId] = useState<TemplateType>(TemplateType.BasicInfo);
 
   // 根据模板ID应用模板
-  const applyTemplate = (templateId: number) => {
-    const template = templates[templateId];
+  const applyTemplate = (templateId: TemplateType) => {
+    const template = templates.get(templateId);
     if (!template) return;
 
     let updatedField = { ...fieldData };
@@ -153,26 +109,26 @@ export default function AddFieldDialog({
         // 根据字段信息确定模板
         if (startParam.field.primary === 1) {
           setDataType(FieldType.Primary);
-          setTemplateId(1); // 主键模板
+          setTemplateId(TemplateType.PrimaryKey); // 主键模板
         } else if (startParam.field.name === 'created_at') {
           setDataType(FieldType.Data);
-          setTemplateId(3); // 创建时间模板
+          setTemplateId(TemplateType.CreatedAt); // 创建时间模板
         } else if (startParam.field.name === 'updated_at') {
           setDataType(FieldType.Data);
-          setTemplateId(4); // 更新时间模板
+          setTemplateId(TemplateType.UpdatedAt); // 更新时间模板
         } else if (startParam.field.name?.endsWith('_id')) {
           setDataType(FieldType.Foreign);
-          setTemplateId(2); // 外键模板
+          setTemplateId(TemplateType.ForeignKey); // 外键模板
         } else {
           setDataType(FieldType.Data);
-          setTemplateId(0); // 基本信息模板
+          setTemplateId(TemplateType.BasicInfo); // 基本信息模板
         }
       } else {
         // 新建字段，默认使用基本信息模板
         setFieldData(initField);
         setDataType(FieldType.Data);
-        setTemplateId(0);
-        applyTemplate(0);
+        setTemplateId(TemplateType.BasicInfo);
+        applyTemplate(TemplateType.BasicInfo);
       }
     }
   }, [startParam]);
@@ -188,17 +144,17 @@ export default function AddFieldDialog({
     // 当手动切换类型时，更新模板选择
     if (fieldData.id === undefined) {
       if (dataType === FieldType.Primary) {
-        setTemplateId(1);
+        setTemplateId(TemplateType.PrimaryKey);
       } else if (dataType === FieldType.Foreign) {
-        setTemplateId(2);
+        setTemplateId(TemplateType.ForeignKey);
       } else {
         // 对于数据类型，根据字段名判断是否为时间字段
         if (fieldData.name === 'created_at') {
-          setTemplateId(3);
+          setTemplateId(TemplateType.CreatedAt);
         } else if (fieldData.name === 'updated_at') {
-          setTemplateId(4);
+          setTemplateId(TemplateType.UpdatedAt);
         } else {
-          setTemplateId(0);
+          setTemplateId(TemplateType.BasicInfo);
         }
       }
     }
@@ -235,14 +191,14 @@ export default function AddFieldDialog({
                 value={FieldType.Primary}
                 control={<Radio />}
                 label="主键"
-                disabled={fieldData.id !== undefined || fieldList?.some(field => field.name === 'id' || field.primary) || templateId === 1}
+                disabled={fieldData.id !== undefined || fieldList?.some(field => field.name === 'id' || field.primary) || templateId === TemplateType.PrimaryKey}
               />
 
               <FormControlLabel
                 value={FieldType.Foreign}
                 control={<Radio />}
                 label="外键"
-                disabled={fieldData.id !== undefined || templateId === 1}
+                disabled={fieldData.id !== undefined || templateId === TemplateType.PrimaryKey}
               />
             </RadioGroup>
 
@@ -251,10 +207,10 @@ export default function AddFieldDialog({
               <Select
                 value={templateId}
                 label="选择模板"
-                onChange={(e) => setTemplateId(e.target.value as number)}
+                onChange={(e) => setTemplateId(e.target.value as TemplateType)}
               >
-                {templates.map((template, index) => (
-                  <MenuItem key={index} value={index}>
+                {Array.from(templates.entries()).map(([id, template]) => (
+                  <MenuItem key={id} value={id}>
                     {template.name}
                   </MenuItem>
                 ))}

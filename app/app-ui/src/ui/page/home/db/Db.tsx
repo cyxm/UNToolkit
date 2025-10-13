@@ -20,6 +20,7 @@ import TableSelector from './TableSelector.js';
 import FieldControlPanel from './FieldControlPanel.js';
 import FieldTable from './FieldTable.js';
 import AddFieldDialog from './AddFieldDialog.js';
+import FieldFunc from './FieldFunc.js';
 
 export default function Db() {
   const dispatch = useAppDispatch();
@@ -64,8 +65,9 @@ export default function Db() {
           <TableSelector />
         </Stack>
 
+        <FieldFunc />
+
         <Stack direction="row" sx={{ flexGrow: 1, height: '100%' }}>
-          <FieldControlPanel />
           <FieldTable />
         </Stack>
       </Stack>
