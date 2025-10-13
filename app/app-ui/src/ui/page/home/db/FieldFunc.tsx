@@ -33,7 +33,16 @@ export default function FieldFunc() {
             size="small"
             onClick={() => dispatch(setFieldEditorDialog({ open: true, field: null }))}
           >
-            从模板添加
+            添加字段模板
+          </Button>
+        )}
+        {selectedTable && (
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => dispatch(setFieldEditorDialog({ open: true, field: null }))}
+          >
+            添加表模板
           </Button>
         )}
       </Stack>
