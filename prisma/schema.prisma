@@ -32,6 +32,7 @@ model fields {
   default        String?
   is_index       Int?
   ex_foreign     Int?
+  ref_id         Int?
 }
 
 model tables {
