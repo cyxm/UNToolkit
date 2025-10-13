@@ -43,7 +43,7 @@ export default function TableSelector() {
 
   return (
     <>
-      <FormControl sx={{ flex: 1 }}>
+      <FormControl sx={{ flex: 1 }} size="small">
         <InputLabel>表</InputLabel>
         <Select
           label="表"

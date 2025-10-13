@@ -2,12 +2,12 @@ import React, { useEffect, } from 'react';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '@/store.js';
 import {
-  initializeDatabase,
-  PageState,
+  initDb,
   loadTablesBySelectedDb,
   loadFieldsBySelectedTable,
   setFieldEditorDialog,
-  addOrUpdateField
+  addOrUpdateField,
+  DbType,
 } from './DbSlice.js';
 import {
   Box,
@@ -25,17 +25,17 @@ export default function Db() {
   const dispatch = useAppDispatch();
 
   const {
-    pageState,
     selectedDb,
     selectedTable,
     fieldEditorDialog,
     fieldList,
+    dbType
   } = useSelector((state: any) => state.db);
 
-  // 初始化
+  // 初始化：仅根据当前 dbType 初始化一次
   useEffect(() => {
-    dispatch(initializeDatabase());
-  }, []);
+    dispatch(initDb(dbType));
+  }, [dbType, dispatch]);
 
   // 监听selectedDb变化，重新加载tableList
   useEffect(() => {
@@ -46,15 +46,6 @@ export default function Db() {
     dispatch(loadFieldsBySelectedTable());
   }, [selectedTable, dispatch]);
 
-  // 载入页面
-  if (pageState === PageState.loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
     <Box sx={{ height: '100%', display: 'flex' }}>
       <Stack spacing={2} direction="column" sx={{ flexGrow: 1, height: '100%', p: 2 }}>
@@ -64,7 +55,7 @@ export default function Db() {
           <TableSelector />
         </Stack>
 
-        <FieldFunc />
+        {selectedTable && <FieldFunc />}
 
         <Stack direction="row" sx={{ flexGrow: 1, height: '100%' }}>
           <FieldTable />

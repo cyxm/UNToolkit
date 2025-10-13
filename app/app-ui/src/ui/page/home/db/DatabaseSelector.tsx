@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store.js';
-import { selectDb, addDb, deleteSelectDb } from './DbSlice.js';
+import { selectDb, addDb, deleteSelectDb, DbType, setDbType } from './DbSlice.js';
 import {
   FormControl,
   InputLabel,
@@ -9,6 +9,7 @@ import {
   MenuItem,
   IconButton,
   Menu,
+  Box,
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import InputDialog from '@/ui/dialog/InputDialog.js';
@@ -17,7 +18,7 @@ import { useAppDispatch } from '@/store.js';
 import { Database } from './DbSlice.js';
 
 export default function DatabaseSelector() {
-  const { databaseList, selectedDb } = useSelector((state: RootState) => state.db);
+  const { databaseList, selectedDb, dbType } = useSelector((state: RootState) => state.db);
   const dispatch = useAppDispatch();
 
   //菜单锚点
@@ -30,7 +31,23 @@ export default function DatabaseSelector() {
 
   return (
     <>
-      <FormControl sx={{ flex: 1 }}>
+      {/* 数据库类型下拉框 */}
+      <FormControl size="small" sx={{ minWidth: 80, mr: 1 }}>
+        <Select
+          value={dbType}
+          size="small"
+          onChange={(event) => dispatch(setDbType(event.target.value as DbType))}
+          sx={{
+            fontSize: '0.8rem',
+            height: '36px'
+          }}
+        >
+          <MenuItem value={DbType.Common}>通用</MenuItem>
+          <MenuItem value={DbType.Template}>模板</MenuItem>
+        </Select>
+      </FormControl>
+
+      <FormControl sx={{ flex: 1 }} size="small">
         <InputLabel>数据库</InputLabel>
         <Select
           label="数据库"

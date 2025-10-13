@@ -37,23 +37,19 @@ export default function FieldFunc() {
           </Button>
         )}
       </Stack>
-      
+
       <Stack direction="row" spacing={1}>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() => dispatch(setFieldEditorDialog({ open: true, field: null }))}
-        >
-          编辑模板
-        </Button>
-        
         {/* 靠右的筛选下拉框 */}
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>筛选</InputLabel>
+        <FormControl size="small" sx={{ minWidth: 100 }}>
+          <InputLabel  >筛选</InputLabel>
           <Select
             value={selectFieldType}
             label="筛选"
+            size="small"
             onChange={handleFilterChange}
+            sx={{
+              fontSize: '0.8rem',
+            }}
           >
             <MenuItem value={FieldType.All}>全部</MenuItem>
             <MenuItem value={FieldType.Data}>数据</MenuItem>

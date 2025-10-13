@@ -1,14 +1,10 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { Prisma } from '@prisma/client';
 
-export enum PageState {
-  loading,
-  loaded
-}
-
-export interface FieldEditorStartParam {
-  open: boolean;
-  field: Field | null;
+// 添加DbType枚举
+export enum DbType {
+  Common = 0,
+  Template = 1
 }
 
 export enum FieldType {
@@ -16,6 +12,11 @@ export enum FieldType {
   Data = 'data',
   Primary = 'primary',
   Foreign = 'foreign'
+}
+
+export interface FieldEditorStartParam {
+  open: boolean;
+  field: Field | null;
 }
 
 export interface Database {
@@ -32,9 +33,6 @@ export interface Table {
 export interface Field extends Prisma.fieldsUncheckedCreateInput { }
 
 export interface DbState {
-  // 页面异步加载状态
-  pageState: PageState;
-
   // 数据库列表
   databaseList: Database[];
   // 当前选中的数据库
@@ -50,18 +48,21 @@ export interface DbState {
   // 当前选中的字段筛选类型
   selectFieldType: FieldType;
 
+  // 数据库类型
+  dbType: DbType;
+
   // 字段编辑对话框
   fieldEditorDialog: FieldEditorStartParam;
 }
 
 const initialState: DbState = {
-  pageState: PageState.loading,
   databaseList: [],
   tableList: [],
   fieldList: [],
   selectedDb: null,
   selectedTable: null,
   selectFieldType: FieldType.All,
+  dbType: DbType.Common,
   fieldEditorDialog: { open: false, field: null },
 };
 
@@ -69,9 +70,6 @@ export const dbSlice = createSlice({
   name: 'db',
   initialState,
   reducers: {
-    setPageState: (state, action: PayloadAction<PageState>) => {
-      state.pageState = action.payload;
-    },
     setDatabaseList: (state, action: PayloadAction<Database[]>) => {
       state.databaseList = action.payload;
     },
@@ -93,11 +91,13 @@ export const dbSlice = createSlice({
     setFieldEditorDialog: (state, action: PayloadAction<FieldEditorStartParam>) => {
       state.fieldEditorDialog = action.payload;
     },
+    setDbType: (state, action: PayloadAction<DbType>) => {
+      state.dbType = action.payload;
+    },
   },
 });
 
 export const {
-  setPageState,
   setDatabaseList,
   setSelectedDb,
   setSelectedTable,
@@ -105,16 +105,16 @@ export const {
   setFieldList,
   setSelectFieldType,
   setFieldEditorDialog,
+  setDbType,
 } = dbSlice.actions;
 
 // 添加异步thunk处理数据库初始化
-export const initializeDatabase = createAsyncThunk(
-  'db/initializeDatabase',
-  async (_, { dispatch }) => {
+export const initDb = createAsyncThunk(
+  'db/initDb',
+  async (dbType: DbType, { dispatch }) => {
     try {
-      dispatch(setPageState(PageState.loading));
       const result = await window.electron.db.databases.query({
-        where: { type: 0 }
+        where: { type: dbType }
       });
       if (result.success) {
         dispatch(setDatabaseList(result.data.map((db: any) => ({
@@ -125,8 +125,6 @@ export const initializeDatabase = createAsyncThunk(
       }
     } catch (err) {
       console.error('读取数据库失败:', err);
-    } finally {
-      dispatch(setPageState(PageState.loaded));
     }
   }
 );
@@ -223,7 +221,9 @@ export const loadFieldsBySelectedTable = createAsyncThunk(
 // 添加异步thunk处理数据库添加
 export const addDb = createAsyncThunk(
   'db/addDb',
-  async (dbName: string, { dispatch }) => {
+  async (dbName: string, { dispatch, getState }) => {
+    const state: any = getState();
+    const dataType = state.db.dataType;
     try {
       const currentTime = Date.now();
       const result = await window.electron.db.databases.create({
@@ -237,7 +237,7 @@ export const addDb = createAsyncThunk(
 
       if (result.success) {
         // 添加成功后重新初始化数据库列表
-        dispatch(initializeDatabase());
+        dispatch(initDb(dataType));
         return result.id;
       } else {
         throw new Error(result.error);
@@ -255,6 +255,7 @@ export const deleteSelectDb = createAsyncThunk(
   async (_, { dispatch, getState }) => {
     const state: any = getState();
     const selectedDb = state.db.selectedDb;
+    const dataType = state.db.dataType;
 
     // 检查是否有选中的数据库
     if (!selectedDb) {
@@ -266,7 +267,7 @@ export const deleteSelectDb = createAsyncThunk(
 
       if (result.success) {
         // 删除成功后重新初始化数据库列表
-        dispatch(initializeDatabase());
+        dispatch(initDb(dataType));
         return result.changes;
       } else {
         throw new Error(result.error);
