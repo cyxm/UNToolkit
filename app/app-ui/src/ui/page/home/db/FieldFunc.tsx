@@ -36,6 +36,9 @@ export default function FieldFunc() {
             从模板添加
           </Button>
         )}
+      </Stack>
+      
+      <Stack direction="row" spacing={1}>
         <Button
           variant="outlined"
           size="small"
@@ -43,22 +46,22 @@ export default function FieldFunc() {
         >
           编辑模板
         </Button>
+        
+        {/* 靠右的筛选下拉框 */}
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel>筛选</InputLabel>
+          <Select
+            value={selectFieldType}
+            label="筛选"
+            onChange={handleFilterChange}
+          >
+            <MenuItem value={FieldType.All}>全部</MenuItem>
+            <MenuItem value={FieldType.Data}>数据</MenuItem>
+            <MenuItem value={FieldType.Primary}>主键</MenuItem>
+            <MenuItem value={FieldType.Foreign}>外键</MenuItem>
+          </Select>
+        </FormControl>
       </Stack>
-      
-      {/* 靠右的筛选下拉框 */}
-      <FormControl size="small" sx={{ minWidth: 120 }}>
-        <InputLabel>筛选</InputLabel>
-        <Select
-          value={selectFieldType}
-          label="筛选"
-          onChange={handleFilterChange}
-        >
-          <MenuItem value={FieldType.All}>全部</MenuItem>
-          <MenuItem value={FieldType.Data}>数据</MenuItem>
-          <MenuItem value={FieldType.Primary}>主键</MenuItem>
-          <MenuItem value={FieldType.Foreign}>外键</MenuItem>
-        </Select>
-      </FormControl>
     </Stack>
   );
 }
