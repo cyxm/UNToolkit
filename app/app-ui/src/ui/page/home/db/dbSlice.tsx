@@ -50,6 +50,8 @@ export interface DbState {
 
   // 数据库类型
   dbType: DbType;
+  // 模板字段列表
+  templateFields: Field[];
 
   // 字段编辑对话框
   fieldEditorDialog: FieldEditorStartParam;
@@ -59,6 +61,7 @@ const initialState: DbState = {
   databaseList: [],
   tableList: [],
   fieldList: [],
+  templateFields: [],
   selectedDb: null,
   selectedTable: null,
   selectFieldType: FieldType.All,
@@ -85,6 +88,9 @@ export const dbSlice = createSlice({
     setFieldList: (state, action: PayloadAction<Field[]>) => {
       state.fieldList = action.payload;
     },
+    setTemplateFields: (state, action: PayloadAction<Field[]>) => {
+      state.templateFields = action.payload;
+    },
     setSelectFieldType: (state, action: PayloadAction<FieldType>) => {
       state.selectFieldType = action.payload;
     },
@@ -103,6 +109,7 @@ export const {
   setSelectedTable,
   setTableList,
   setFieldList,
+  setTemplateFields,
   setSelectFieldType,
   setFieldEditorDialog,
   setDbType,
@@ -472,6 +479,38 @@ export const deleteField = createAsyncThunk(
     } catch (err) {
       console.error('删除字段失败:', err);
       throw err;
+    }
+  }
+);
+
+// 添加异步thunk处理模板字段初始化
+export const initTemplateFields = createAsyncThunk(
+  'db/initTemplateFields',
+  async (_, { dispatch, getState }) => {
+    const state: any = getState();
+    try {
+      // 查询类型为模板的数据库
+      const result = await window.electron.db.tables.query({
+        where: { name: 'template_single_field' },
+        select: { id: true }
+      });
+
+      if (result.success) {
+        // 获取表ID
+        const tableId = result.data[0]?.id;
+        if (tableId) {
+          // 查询该表的所有字段
+          const fieldsResult = await window.electron.db.fields.query({
+            where: { table_id: tableId }
+          });
+
+          if (fieldsResult.success) {
+            dispatch(setTemplateFields(fieldsResult.data));
+          }
+        }
+      }
+    } catch (err) {
+      console.error('初始化模板字段失败:', err);
     }
   }
 );

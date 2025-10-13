@@ -16,8 +16,10 @@ import {
   Button,
   Box
 } from '@mui/material';
-import { Field, FieldType } from '@/ui/page/home/db/DbSlice.js';
+import { Field, FieldType, initTemplateFields, setTemplateFields } from '@/ui/page/home/db/DbSlice.js';
 import { FieldEditorStartParam } from './DbSlice.js';
+import { useAppDispatch } from '@/store.js';
+import { useSelector } from 'react-redux';
 
 interface AddFieldDialogProps {
   startParam: FieldEditorStartParam;
@@ -32,6 +34,9 @@ export default function AddFieldDialog({
   onSubmit,
   fieldList,
 }: AddFieldDialogProps) {
+
+  const dispatch = useAppDispatch();
+  const { templateFields } = useSelector((state: any) => state.db);
 
   const initField = {
     id: undefined,
@@ -74,8 +79,24 @@ export default function AddFieldDialog({
         setFieldData(initField);
         setDataType(FieldType.Data);
       }
+
+      dispatch(initTemplateFields());
     }
   }, [startParam]);
+
+  const applyTemplate = (templateId: number) => {
+    const template = templateFields.find((field: Field) => field.id === templateId);
+    if (template) {
+      setFieldData({
+        ...fieldData,
+        name: template.name,
+        type: template.type,
+        not_null: template.not_null,
+        unique: template.unique,
+        default: template.default,
+      });
+    }
+  };
 
   const handleSubmit = () => {
     onSubmit({
@@ -117,6 +138,22 @@ export default function AddFieldDialog({
                 disabled={fieldData.id !== undefined}
               />
             </RadioGroup>
+
+            <FormControl fullWidth margin="dense">
+              <InputLabel>模板</InputLabel>
+              <Select
+                label="选择模板填充"
+                onChange={(e) => {
+                  applyTemplate(e.target.value as number);
+                }}
+              >
+                {templateFields.map((field: Field) => (
+                  <MenuItem key={field.id} value={field.id}>
+                    {field.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             <TextField
               autoFocus
