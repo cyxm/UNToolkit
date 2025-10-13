@@ -111,7 +111,10 @@ export const {
 // 添加异步thunk处理数据库初始化
 export const initDb = createAsyncThunk(
   'db/initDb',
-  async (dbType: DbType, { dispatch }) => {
+  async (_, { dispatch, getState }) => {
+    const state: any = getState();
+    const dbType = state.db.dbType;
+    console.log('初始化数据库列表:', dbType);
     try {
       const result = await window.electron.db.databases.query({
         where: { type: dbType }
@@ -223,7 +226,7 @@ export const addDb = createAsyncThunk(
   'db/addDb',
   async (dbName: string, { dispatch, getState }) => {
     const state: any = getState();
-    const dataType = state.db.dataType;
+    const dbType = state.db.dbType;
     try {
       const currentTime = Date.now();
       const result = await window.electron.db.databases.create({
@@ -232,12 +235,12 @@ export const addDb = createAsyncThunk(
         create_time: currentTime,
         update_time: currentTime,
         enable: 1,
-        type: 0,
+        type: dbType,
       });
 
       if (result.success) {
         // 添加成功后重新初始化数据库列表
-        dispatch(initDb(dataType));
+        dispatch(initDb());
         return result.id;
       } else {
         throw new Error(result.error);
@@ -255,7 +258,6 @@ export const deleteSelectDb = createAsyncThunk(
   async (_, { dispatch, getState }) => {
     const state: any = getState();
     const selectedDb = state.db.selectedDb;
-    const dataType = state.db.dataType;
 
     // 检查是否有选中的数据库
     if (!selectedDb) {
@@ -267,7 +269,7 @@ export const deleteSelectDb = createAsyncThunk(
 
       if (result.success) {
         // 删除成功后重新初始化数据库列表
-        dispatch(initDb(dataType));
+        dispatch(initDb());
         return result.changes;
       } else {
         throw new Error(result.error);

@@ -34,7 +34,7 @@ export default function Db() {
 
   // 初始化：仅根据当前 dbType 初始化一次
   useEffect(() => {
-    dispatch(initDb(dbType));
+    dispatch(initDb());
   }, [dbType, dispatch]);
 
   // 监听selectedDb变化，重新加载tableList
