@@ -137,3 +137,7 @@ build/
 /generated/prisma
 
 /app/generated/prisma
+
+**/.idea/**
+
+**/__pycache__/**
