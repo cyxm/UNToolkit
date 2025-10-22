@@ -141,3 +141,5 @@ build/
 **/.idea/**
 
 **/__pycache__/**
+
+**/.antlr/**
