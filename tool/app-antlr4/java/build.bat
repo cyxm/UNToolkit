@@ -1,1 +1,1 @@
-javac -cp ".;D:\antlr\antlr-4.13.2-complete.jar" *.java
+javac -cp ".;D:\\antlr\\antlr-4.13.2-complete.jar" *.java
