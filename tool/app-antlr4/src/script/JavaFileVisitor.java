@@ -9,8 +9,7 @@ import java.util.List;
 public class JavaFileVisitor extends JavaParserBaseVisitor<Void> {
     public PackageInfo packageInfo = new PackageInfo();
     public ImportInfo importInfo = new ImportInfo();
-    // 存储解析结果
-    private String className;
+    public ClassInfo classInfo = new ClassInfo();
     private List<MethodInfo> methods = new ArrayList<>();
 
     public static class PackageInfo {
@@ -26,6 +25,14 @@ public class JavaFileVisitor extends JavaParserBaseVisitor<Void> {
 
         public boolean validate() {
             return importNames != null && !importNames.isEmpty();
+        }
+    }
+
+    public static class ClassInfo {
+        public List<String> clzNames = new ArrayList<>();
+
+        public boolean validate() {
+            return clzNames != null && !clzNames.isEmpty();
         }
     }
 
@@ -56,6 +63,8 @@ public class JavaFileVisitor extends JavaParserBaseVisitor<Void> {
 
     @Override
     public Void visitClassDeclaration(JavaParser.ClassDeclarationContext ctx) {
+        String clzName=ctx.identifier().getText();
+        classInfo.clzNames.add(clzName);
         return super.visitClassDeclaration(ctx);
     }
 

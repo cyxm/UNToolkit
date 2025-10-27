@@ -41,11 +41,20 @@ public class Antlr4Test {
         checkImport(checkSuq, visitor);
         checkSuq++;
 
-//        System.out.println("类名：" + visitor.getClassName());
-//        System.out.println("方法列表：");
-//        for (JavaFileVisitor.MethodInfo method : visitor.getMethods()) {
-//            System.out.println("- " + method.returnType + " " + method.name + "(" + String.join(", ", method.params) + ")");
-//        }
+        checkClass(checkSuq, visitor);
+        checkSuq++;
+    }
+
+    private static void checkClass(int checkSuq, JavaFileVisitor visitor) {
+        System.out.print(checkSuq + ":");
+        if (visitor.classInfo.validate()) {
+            System.out.println("SUCCESS:类名:");
+            for (String clz : visitor.classInfo.clzNames) {
+                System.out.println(clz);
+            }
+        } else {
+            System.out.println("ERROR:未定义类");
+        }
     }
 
     public static void checkPackage(int checkSuq, JavaFileVisitor visitor) {
