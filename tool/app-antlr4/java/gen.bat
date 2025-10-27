@@ -1,1 +1,0 @@
-../antlr4.bat -visitor ./g4/JavaLexer.g4 ./g4/JavaParser.g4 -o ./src
