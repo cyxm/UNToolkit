@@ -50,6 +50,12 @@ public class JavaFileVisitor extends JavaParserBaseVisitor<Void> {
     }
 
     @Override
+    public Void visitCompilationUnit(JavaParser.CompilationUnitContext ctx) {
+        System.out.println(ctx.toStringTree());
+        return super.visitCompilationUnit(ctx);
+    }
+
+    @Override
     public Void visitPackageDeclaration(JavaParser.PackageDeclarationContext ctx) {
         packageInfo.name = ctx.qualifiedName().getText();
         return super.visitPackageDeclaration(ctx);
@@ -63,7 +69,7 @@ public class JavaFileVisitor extends JavaParserBaseVisitor<Void> {
 
     @Override
     public Void visitClassDeclaration(JavaParser.ClassDeclarationContext ctx) {
-        String clzName=ctx.identifier().getText();
+        String clzName = ctx.identifier().getText();
         classInfo.clzNames.add(clzName);
         return super.visitClassDeclaration(ctx);
     }
