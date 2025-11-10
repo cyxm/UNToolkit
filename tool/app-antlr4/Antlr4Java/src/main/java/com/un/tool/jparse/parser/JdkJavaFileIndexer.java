@@ -1,37 +1,48 @@
-package script;
+package com.un.tool.jparse.parser;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.un.tool.jparse.model.JavaFileSet;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
 
 public class JdkJavaFileIndexer {
-    // 存储：Key=文件名（如 String.java），Value=文件绝对路径
-    private static final Map<String, String> FILE_NAME_TO_PATH = new HashMap<>();
-    // 可选：存储文件名到完整类名的映射（如 String.java → java.lang.String）
-    private static final Map<String, String> FILE_NAME_TO_FULL_CLASS = new HashMap<>();
+    private String javaSrcRoot;
+    private String cacheOutRoot;
 
-    private static final String JDK_SRC_ROOT = "C:\\Program Files\\Java\\jdk-21\\lib\\src";
+    private final Stack<String> NAME_STACK = new Stack<>();
 
-    private static final Stack<String> NAME_STACK = new Stack<>();
+    private final Gson gson = new Gson();
 
-    private static final Gson gson = new Gson();
+    private final Map<String, JavaFileSet> MAP_CLZ = new HashMap<>();
 
-    private static final Map<String, JavaFileSet> MAP_CLZ = new HashMap<>();
+    public JdkJavaFileIndexer(String srcRoot, String outRoot) {
+        javaSrcRoot = srcRoot;
+        cacheOutRoot = outRoot;
+    }
 
-    public static void main(String[] args) {
-        File rootDir = new File(JDK_SRC_ROOT);
+    public void startParse() {
+        if (javaSrcRoot == null || javaSrcRoot.isEmpty()) {
+            return;
+        }
+
+        File rootDir = new File(javaSrcRoot);
+        if (!rootDir.exists()) {
+            return;
+        }
+
         handleDir(rootDir);
     }
 
     /**
      * 递归遍历目录，构建文件名→路径/类名的映射
      */
-    private static void handleDir(File dir) {
+    private void handleDir(File dir) {
         if (!dir.exists() || !dir.isDirectory() || !dir.canRead()) {
             return;
         }
@@ -63,7 +74,18 @@ public class JdkJavaFileIndexer {
             s.calCount();
         }
 
-        try (FileWriter writer = new FileWriter("jdk21_index.json")) {
+        File f = new File(cacheOutRoot + "\\jdk21_index.json");
+        try {
+            f.getParentFile().mkdirs();
+            if (f.exists()) {
+                f.delete();
+            }
+            f.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try (FileWriter writer = new FileWriter(f)) {
             gson.toJson(MAP_CLZ, writer);
             System.out.println("索引已保存到 jdk_index.json");
         } catch (IOException e) {
@@ -71,7 +93,7 @@ public class JdkJavaFileIndexer {
         }
     }
 
-    private static void handleModuleJava(File parent) {
+    private void handleModuleJava(File parent) {
         if (!parent.exists() || !parent.isDirectory() || !parent.canRead()) {
             return;
         }
@@ -106,7 +128,7 @@ public class JdkJavaFileIndexer {
         }
     }
 
-    private static String buildPackageName() {
+    private String buildPackageName() {
         StringBuilder sb = new StringBuilder();
         for (int i = 1; i < NAME_STACK.size(); i++) {
             sb.append(NAME_STACK.get(i));

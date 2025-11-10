@@ -1,4 +1,4 @@
-package script;
+package com.un.tool.jparse.model;
 
 import java.util.ArrayList;
 import java.util.List;
