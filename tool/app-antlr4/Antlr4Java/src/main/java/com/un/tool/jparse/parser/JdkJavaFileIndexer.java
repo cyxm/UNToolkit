@@ -2,6 +2,7 @@ package com.un.tool.jparse.parser;
 
 import com.google.gson.Gson;
 import com.un.tool.jparse.model.JavaFileSet;
+import com.un.tool.jparse.model.ModuleSet;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -19,7 +20,7 @@ public class JdkJavaFileIndexer {
 
     private final Gson gson = new Gson();
 
-    private final Map<String, JavaFileSet> MAP_CLZ = new HashMap<>();
+    private final Map<String, ModuleSet> MAP_CLZ = new HashMap<>();
 
     public JdkJavaFileIndexer(String srcRoot, String outRoot) {
         javaSrcRoot = srcRoot;
@@ -70,7 +71,7 @@ public class JdkJavaFileIndexer {
             }
         }
 
-        for (JavaFileSet s : MAP_CLZ.values()) {
+        for (ModuleSet s : MAP_CLZ.values()) {
             s.calCount();
         }
 
@@ -116,11 +117,11 @@ public class JdkJavaFileIndexer {
                 } else if ("package-info.java".equals(fileName)) {
                     //ignore
                 } else if (lowercaseName.endsWith("java")) {
+                    String moduleName = NAME_STACK.getFirst();
                     String packageName = buildPackageName();
-                    JavaFileSet javaFileSet = MAP_CLZ.putIfAbsent(packageName, new JavaFileSet(packageName));
-                    if (javaFileSet != null) {
-                        javaFileSet.add(fileName.substring(0, fileName.indexOf(".java")));
-                    }
+                    ModuleSet moduleSet = MAP_CLZ.computeIfAbsent(moduleName, k -> new ModuleSet(moduleName));
+                    JavaFileSet javaFileSet = moduleSet.computeIfAbsent(packageName, k -> new JavaFileSet(packageName));
+                    javaFileSet.add(fileName.substring(0, fileName.indexOf(".java")));
                 } else {
                     //ignore
                 }

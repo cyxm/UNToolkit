@@ -4,19 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JavaFileSet {
-    String moduleName = "";
+    String name = "";
     int count = 0;
-    List<String> javaNames = new ArrayList<>();
+    List<String> java = new ArrayList<>();
 
     public JavaFileSet(String moduleName) {
-        this.moduleName = moduleName;
+        this.name = moduleName;
     }
 
     public void add(String javaName) {
-        javaNames.add(javaName);
+        java.add(javaName);
     }
 
     public void calCount() {
-        count = javaNames.size();
+        count = java.size();
     }
 }
