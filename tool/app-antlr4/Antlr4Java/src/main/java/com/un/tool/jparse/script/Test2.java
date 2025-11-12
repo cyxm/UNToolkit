@@ -31,14 +31,16 @@ public class Test2 {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         JavaParser parser = new JavaParser(tokens);
-        ParseTree tree = parser.compilationUnit();
+        JavaParser.CompilationUnitContext tree = parser.compilationUnit();
+
+        System.out.println(tree.getRuleIndex());
 
         handlePackage(tree);
         handleImport(tree);
         handleTopClz(tree);
     }
 
-    private static void handleImport(ParseTree tree) {
+    private static void handleImport(JavaParser.CompilationUnitContext tree) {
         List<String> importNames = new ArrayList<>();
         tree.accept(new JavaParserBaseVisitor<>() {
             @Override
@@ -50,7 +52,7 @@ public class Test2 {
 
     }
 
-    private static void handlePackage(ParseTree tree) {
+    private static void handlePackage(JavaParser.CompilationUnitContext tree) {
         List<String> packageName = new ArrayList<>();
         tree.accept(new JavaParserBaseVisitor<>() {
             @Override
@@ -69,7 +71,7 @@ public class Test2 {
         }
     }
 
-    private static void handleTopClz(ParseTree tree) {
+    private static void handleTopClz(JavaParser.CompilationUnitContext tree) {
         tree.accept(new JavaParserBaseVisitor<>() {
             @Override
             public Object visitClassDeclaration(JavaParser.ClassDeclarationContext ctx) {
