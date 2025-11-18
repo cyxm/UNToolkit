@@ -1,7 +1,6 @@
 # encoding=UTF-8
+import json
 from pathlib import Path
-
-from logic.json.JsonUtil import JsonUtil
 
 
 class MemorySL:
@@ -15,14 +14,14 @@ class MemorySL:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         path.write_text(
-            JsonUtil.dumps(net),
+            json.dumps(net.__dict__),
             encoding="utf-8"
         )
 
     @staticmethod
-    def load(cls, file_path):
+    def load(file_path, cls):
         if file_path is None:
             return None
 
         path = Path(file_path)
-        return JsonUtil.loads(path.read_text("utf-8"), cls)
+        return cls.model_validate(json.loads(path.read_text("utf-8")))
