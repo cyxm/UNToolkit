@@ -1,31 +1,44 @@
 # encoding=UTF-8
-from dataclasses import dataclass, field
-
-from dataclasses_json import dataclass_json, Exclude, Undefined, config
+from logic.json.IJsonSerial import IJsonSerial
 
 
-@dataclass_json(undefined=Undefined.EXCLUDE)
-@dataclass(init=False)
-class MemoryUnit:
-    id: int
-    info: list | None
-    next: list | None
+class MemoryUnit(IJsonSerial):
 
-    id_seq: int = field(default=0, init=False, repr=False,
-                        metadata=config(exclude=Exclude.ALWAYS))
-
-    def __init__(self, id=None, info=None, next=None):
-        if id is None:
-            self.id = MemoryUnit.id_seq
-        else:
-            self.id = id
-        MemoryUnit.id_seq += 1
-
+    def __init__(self, id, info=None, next=None):
+        self.id = id
         self.info = info
         self.next = next
 
+        """
+        (强度,阈值),会动态变化的内部状态
+        """
+        self.state = [0, 5]
+
+    def __json_encode__(self):
+        return {
+            "i": self.id,
+            "f": self.info if self.info is not None else "",
+            "n": self.next if self.next is not None else []
+        }
+
+    @classmethod
+    def __json_decode__(cls, json: dict):
+        print("=========")
+        return cls(
+            id=json["i"],
+            info=json["f"],
+            next=json["n"]
+        )
+
     def activate(self, signal):
-        pass
+        self.state[0] += signal
+        """
+        超过阈值,向下一级发送信息
+        """
+        if self.state[0] >= self.state[1]:
+            self.state[0] = 0
+            self.transmit()
 
     def transmit(self):
-        pass
+        for n, m in self.next:
+            pass

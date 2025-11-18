@@ -1,7 +1,7 @@
 # encoding=UTF-8
 from pathlib import Path
 
-from logic.net.base_memory_net import BaseMemoryNet
+from logic.json.JsonUtil import JsonUtil
 
 
 class MemorySL:
@@ -15,14 +15,14 @@ class MemorySL:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         path.write_text(
-            net.to_json(ensure_ascii=False),
+            JsonUtil.dumps(net),
             encoding="utf-8"
         )
 
     @staticmethod
-    def load(file_path):
+    def load(cls, file_path):
         if file_path is None:
             return None
 
         path = Path(file_path)
-        return BaseMemoryNet.from_json(path.read_text("utf-8"))
+        return JsonUtil.loads(path.read_text("utf-8"), cls)
