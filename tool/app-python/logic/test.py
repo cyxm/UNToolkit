@@ -15,5 +15,8 @@ if __name__ == "__main__":
         mnet = MemoryNet(idSeq=0, unitNet=[])
         MemorySL.save(mnet, path)
 
-    mnet.activate("1")
+    mnet.learn("苹果")
+    mnet.learn("桔子")
+    mnet.learn("香蕉")
+
     MemorySL.save(mnet, path)
