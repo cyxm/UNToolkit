@@ -12,7 +12,8 @@ if __name__ == "__main__":
     if file.is_file():
         mnet = MemorySL.load(path, MemoryNet)
     else:
-        mnet = MemoryNet(unitNet=[])
+        mnet = MemoryNet(idSeq=0, unitNet=[])
         MemorySL.save(mnet, path)
 
-    mnet.
+    mnet.activate("1")
+    MemorySL.save(mnet, path)

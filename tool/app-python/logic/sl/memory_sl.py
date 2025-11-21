@@ -14,7 +14,7 @@ class MemorySL:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         path.write_text(
-            json.dumps(net.__dict__),
+            json.dumps(net.model_dump()),
             encoding="utf-8"
         )
 
