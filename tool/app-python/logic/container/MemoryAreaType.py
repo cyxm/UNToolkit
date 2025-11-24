@@ -3,7 +3,12 @@ from enum import Enum
 
 
 class MemoryAreaType(Enum):
-    AREA_DIRECT = 0x0100_0000
+    AREA_SEMANTIC_DIRECT = 0
     """
     物理实体直接映射语义
+    """
+
+    AREA_HAN_CHAR = 1
+    """
+    汉字字符
     """
