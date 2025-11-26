@@ -7,7 +7,6 @@ class MemoryUnit(BaseModel):
     info: str
     next: list
     nextStrength: dict
-    nextTime: dict
     """
     (强度,阈值),会动态变化的内部状态
     """

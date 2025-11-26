@@ -28,5 +28,4 @@ if __name__ == "__main__":
     mnet.learnDirectSemantic("石榴")
 
     # 保存
-    mnet.update()
     MemorySL.save(mnet, path)

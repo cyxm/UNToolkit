@@ -13,6 +13,7 @@ class MemorySL:
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
+        net.update()
         path.write_text(
             json.dumps(net.model_dump(), ensure_ascii=False, separators=(',', ':')),
             encoding="utf-8"

@@ -54,7 +54,6 @@ class MemoryAll(BaseModel):
         if e1.id not in e0.next:
             e0.next.append(e1.id)
             e0.nextStrength[e1.id] = 0x00FF
-            e0.nextTime[e1.id] = int(time.time())
 
     def learnDirectSemantic(self, signal):
         """
