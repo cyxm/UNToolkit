@@ -1,15 +1,27 @@
 package com.un.tool.jparse.test;
 
 public class Test {
-    int i = 0;
-
-    static {
+    static class Clz0 {
 
     }
 
-    @Deprecated
-    public void t() {
-        i = 2;
-        i--;
+    public static class Clz1 {
+
     }
+
+    class Clz2 {
+
+    }
+
+    interface Inf0 {
+
+    }
+
+    interface Inf1 {
+
+    }
+}
+
+class Test2 {
+
 }
