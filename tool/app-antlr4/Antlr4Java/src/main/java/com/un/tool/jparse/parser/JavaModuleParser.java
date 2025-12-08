@@ -1,6 +1,7 @@
 package com.un.tool.jparse.parser;
 
 import com.google.gson.Gson;
+import com.un.tool.jparse.model.JavaFileSet;
 import com.un.tool.jparse.model.ModuleSet;
 
 import java.io.File;
@@ -116,7 +117,16 @@ public class JavaModuleParser {
         }
     }
 
-    private void handlePackage(File parent, ModuleSet moduleSet) {
+    public void handlePackage(File parent, ModuleSet moduleSet) {
+        handlePackage(parent, moduleSet, new IJavaParser() {
+            @Override
+            public void parse(File file, JavaFileSet set) {
+                SingleJavaFileParser.parse(file, set);
+            }
+        });
+    }
+
+    private void handlePackage(File parent, ModuleSet moduleSet, IJavaParser parser) {
         File[] subFiles = parent.listFiles();
         if (subFiles == null) {
             return;
@@ -140,7 +150,7 @@ public class JavaModuleParser {
                     } else if ("package-info.java".equals(fileName)) {
                         //ignore
                     } else if (lowercaseName.endsWith("java")) {
-                        SingleJavaFileParser.parse(f, moduleSet.getFileSet());
+                        parser.parse(f, moduleSet.getFileSet());
                     } else {
                         //ignore
                     }

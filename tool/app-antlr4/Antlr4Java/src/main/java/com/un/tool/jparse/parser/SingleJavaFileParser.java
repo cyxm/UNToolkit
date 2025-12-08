@@ -35,8 +35,6 @@ public class SingleJavaFileParser {
         JavaParser parser = new JavaParser(tokens);
         JavaParser.CompilationUnitContext tree = parser.compilationUnit();
 
-        ResultSingleFile resultSingleFile = new ResultSingleFile();
-
         handleClzDefine(javaFileNameWithNoSuffix, tree, javaFileSet);
     }
 
