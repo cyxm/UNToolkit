@@ -6,11 +6,11 @@ import java.util.Stack;
 
 public class ModuleSet {
 
-    private int _c = 0;
+    private int count = 0;
 
     private transient final Stack<String> packageName = new Stack<>();
-    private Map<String, ModuleSet> _m = null;
-    private JavaFileSet _f;
+    private Map<String, ModuleSet> module = null;
+    private JavaFileSet fileSet;
 
     public void addPackage(String node) {
         packageName.push(node);
@@ -29,35 +29,35 @@ public class ModuleSet {
         if (module == null) {
             return;
         }
-        if (_m == null) {
-            _m = new HashMap<>();
+        if (this.module == null) {
+            this.module = new HashMap<>();
         }
-        _m.put(module.getPackage(), module);
+        this.module.put(module.getPackage(), module);
     }
 
     public void updateInfo() {
-        if (_f != null) {
-            _f.calCount();
-            _c = _f.getCount();
+        if (fileSet != null) {
+            fileSet.calCount();
+            count = fileSet.getCount();
         }
 
-        if (_m == null) {
+        if (module == null) {
             return;
         }
-        for (ModuleSet s : _m.values()) {
+        for (ModuleSet s : module.values()) {
             s.updateInfo();
-            _c += s.get_c();
+            count += s.getCount();
         }
     }
 
-    public int get_c() {
-        return _c;
+    public int getCount() {
+        return count;
     }
 
-    public JavaFileSet get_f() {
-        if (_f == null) {
-            _f = new JavaFileSet();
+    public JavaFileSet getFileSet() {
+        if (fileSet == null) {
+            fileSet = new JavaFileSet();
         }
-        return _f;
+        return fileSet;
     }
 }

@@ -140,7 +140,7 @@ public class JavaModuleParser {
                     } else if ("package-info.java".equals(fileName)) {
                         //ignore
                     } else if (lowercaseName.endsWith("java")) {
-                        SingleJavaFileParser.parse(f, moduleSet.get_f());
+                        SingleJavaFileParser.parse(f, moduleSet.getFileSet());
                     } else {
                         //ignore
                     }
