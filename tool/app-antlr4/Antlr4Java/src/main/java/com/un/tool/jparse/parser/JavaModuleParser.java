@@ -120,7 +120,7 @@ public class JavaModuleParser {
     public void handlePackage(File parent, ModuleSet moduleSet) {
         handlePackage(parent, moduleSet, new IJavaParser() {
             @Override
-            public void parse(File file, JavaFileSet set) {
+            public void parse(File file, ModuleSet set) {
                 SingleJavaFileParser.parse(file, set);
             }
         });
@@ -150,7 +150,7 @@ public class JavaModuleParser {
                     } else if ("package-info.java".equals(fileName)) {
                         //ignore
                     } else if (lowercaseName.endsWith("java")) {
-                        parser.parse(f, moduleSet.getFileSet());
+                        parser.parse(f, moduleSet);
                     } else {
                         //ignore
                     }

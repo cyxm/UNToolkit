@@ -11,6 +11,7 @@ public class ModuleSet {
     private transient final Stack<String> packageName = new Stack<>();
     private Map<String, ModuleSet> module = null;
     private JavaFileSet fileSet;
+    private JavaSetEmptyImport emptyImport;
 
     public void addPackage(String node) {
         packageName.push(node);
@@ -59,5 +60,9 @@ public class ModuleSet {
             fileSet = new JavaFileSet();
         }
         return fileSet;
+    }
+
+    public void setEmptyImport(JavaSetEmptyImport javaSet) {
+        emptyImport = javaSet;
     }
 }

@@ -5,37 +5,65 @@ import com.un.tool.antlr4.JavaParser;
 import com.un.tool.antlr4.JavaParserBaseVisitor;
 import com.un.tool.jparse.model.JavaFile;
 import com.un.tool.jparse.model.JavaFileSet;
-import com.un.tool.jparse.model.result.ResultSingleFile;
+import com.un.tool.jparse.model.JavaSetEmptyImport;
+import com.un.tool.jparse.model.ModuleSet;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SingleJavaFileParser {
 
-    public static void parse(File f, JavaFileSet javaFileSet) {
+    public static void parse(File f, ModuleSet moduleSet) {
         String javaFilePath = f.getAbsolutePath();
         String javaFileName = f.getName();
         String javaFileNameWithNoSuffix = javaFileName.substring(0, javaFileName.indexOf(".java"));
-        CharStream input = null;
-        try {
-            input = CharStreams.fromFileName(javaFilePath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (input == null) {
+
+        JavaParser.CompilationUnitContext tree = getRoot(javaFilePath);
+        if (tree == null) {
             return;
         }
 
-        JavaLexer lexer = new JavaLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        parseEmpty(f, moduleSet);
 
-        JavaParser parser = new JavaParser(tokens);
-        JavaParser.CompilationUnitContext tree = parser.compilationUnit();
+//        handleClzDefine(javaFileNameWithNoSuffix, tree, javaFileSet);
+    }
 
-        handleClzDefine(javaFileNameWithNoSuffix, tree, javaFileSet);
+    public static void parseEmpty(File f, ModuleSet moduleSet) {
+        String javaFilePath = f.getAbsolutePath();
+        String javaFileName = f.getName();
+        String javaFileNameWithNoSuffix = javaFileName.substring(0, javaFileName.indexOf(".java"));
+
+        JavaParser.CompilationUnitContext tree = getRoot(javaFilePath);
+        if (tree == null) {
+            return;
+        }
+
+        JavaSetEmptyImport javaSet = handleEmptyImport(javaFileNameWithNoSuffix, tree);
+        moduleSet.setEmptyImport(javaSet);
+    }
+
+
+    private static JavaSetEmptyImport handleEmptyImport(String name, JavaParser.CompilationUnitContext tree) {
+        AtomicInteger count = new AtomicInteger(0);
+        tree.accept(new JavaParserBaseVisitor<>() {
+            @Override
+            public Object visitImportDeclaration(JavaParser.ImportDeclarationContext ctx) {
+                count.incrementAndGet();
+                return super.visitImportDeclaration(ctx);
+            }
+        });
+
+        if (count.get() == 0) {
+            JavaSetEmptyImport javaSet = new JavaSetEmptyImport();
+            javaSet.add(name);
+            return javaSet;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -89,5 +117,23 @@ public class SingleJavaFileParser {
         } else if (file.isPureRcd()) {
             result.addPureRcd(file.getRcd());
         }
+    }
+
+    public static JavaParser.CompilationUnitContext getRoot(String filePath) {
+        CharStream input = null;
+        try {
+            input = CharStreams.fromFileName(filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (input == null) {
+            return null;
+        }
+
+        JavaLexer lexer = new JavaLexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+        JavaParser parser = new JavaParser(tokens);
+        return parser.compilationUnit();
     }
 }
