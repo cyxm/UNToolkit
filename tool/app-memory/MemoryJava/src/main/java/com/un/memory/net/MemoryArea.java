@@ -2,7 +2,9 @@ package com.un.memory.net;
 
 import com.un.memory.unit.MemoryUnit;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MemoryArea {
     /**
@@ -24,17 +26,38 @@ public class MemoryArea {
 
     List<MemoryUnit> unitNet;
 
+    transient Map<String, MemoryUnit> unitCache;
+
     /**
      * 此区域是否有更改
      */
     transient boolean modifyFlag = false;
 
-    public MemoryArea(int min, int maxCount, int areaType) {
+    public MemoryArea(int areaType, int min, int maxCount) {
+        this.areaType = areaType;
         this.min = min;
         this.maxCount = maxCount;
-        this.areaType = areaType;
+
         this.count = 0;
         this.modifyFlag = true;
+    }
+
+    public void cache() {
+        if (unitNet == null) {
+            return;
+        }
+
+        if (unitCache == null) {
+            unitCache = new HashMap<>();
+        }
+
+        for (MemoryUnit unit : unitNet) {
+            unitCache.put(unit.getInfo(), unit);
+        }
+    }
+
+    public MemoryUnit searchUnit(String info) {
+        return unitCache.get(info);
     }
 
     public int getMin() {
