@@ -11,12 +11,9 @@ public class LearnUtil {
         if (all == null) {
             return;
         }
-//
-//        all.checkSingleType(AreaType.CODE_CHAR, memoryArea -> {
-//
-//            null
-//        });
-//
-//        MemoryUtil.addArea(all,AreaType.CODE_CHAR);
+
+        all.checkSingleType(AreaType.CODE_CHAR, memoryArea -> memoryArea.searchUnit(entityName));
+
+        MemoryUtil.addArea(all, AreaType.CODE_CHAR);
     }
 }
