@@ -1,9 +1,7 @@
 package com.un.memory.assist;
 
 import com.un.memory.all.MemoryAll;
-import com.un.memory.net.MemoryArea;
-
-import java.util.function.Function;
+import com.un.memory.unit.MemoryUnit;
 
 public class LearnUtil {
 
@@ -12,8 +10,11 @@ public class LearnUtil {
             return;
         }
 
-        all.checkSingleType(AreaType.CODE_CHAR, memoryArea -> memoryArea.searchUnit(entityName));
+        MemoryUnit unit = all.checkSingleType(AreaType.CODE_CHAR, entityName);
+        if (unit == null) {
+            MemoryUtil.addArea(all, AreaType.CODE_CHAR);
+        } else {
 
-        MemoryUtil.addArea(all, AreaType.CODE_CHAR);
+        }
     }
 }

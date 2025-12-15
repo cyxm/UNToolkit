@@ -26,6 +26,10 @@ public class MemoryUtil {
         meta.increaseStartSeq();
     }
 
+    public static void getIdleArea(MemoryAll all, int areaType) {
+
+    }
+
     public static void searchUnit(
             MemoryAll all,
             int areaType,
@@ -40,7 +44,7 @@ public class MemoryUtil {
         }
 
         MemoryUnit unit = all.checkSingleType(areaType, memoryArea -> memoryArea.searchUnit(info));
-        if(unit==null){
+        if (unit == null) {
             return;
         }
     }

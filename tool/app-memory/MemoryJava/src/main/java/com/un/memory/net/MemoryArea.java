@@ -56,8 +56,8 @@ public class MemoryArea {
         }
     }
 
-    public MemoryUnit searchUnit(String info) {
-        return unitCache.get(info);
+    public MemoryUnit searchUnit(String entityName) {
+        return unitCache.get(entityName);
     }
 
     public int getMin() {

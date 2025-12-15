@@ -29,7 +29,7 @@ public class MemoryAll {
         }
     }
 
-    public MemoryUnit checkSingleType(int areaType, Function<MemoryArea, MemoryUnit> func) {
+    public MemoryUnit checkSingleType(int areaType, String entityName) {
         if (areas == null) {
             return null;
         }
@@ -40,7 +40,7 @@ public class MemoryAll {
         }
 
         for (MemoryArea a : singleTypeAreas.values()) {
-            MemoryUnit unit = func.apply(a);
+            MemoryUnit unit = a.searchUnit(entityName);
             if (unit != null) {
                 return unit;
             }
