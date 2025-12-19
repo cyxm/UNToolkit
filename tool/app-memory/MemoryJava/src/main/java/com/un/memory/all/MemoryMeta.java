@@ -1,10 +1,5 @@
 package com.un.memory.all;
 
-import com.un.memory.net.MemoryArea;
-
-import java.util.HashMap;
-import java.util.Map;
-
 public class MemoryMeta {
 
     /**

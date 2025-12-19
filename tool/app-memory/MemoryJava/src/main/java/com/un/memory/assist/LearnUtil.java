@@ -5,6 +5,9 @@ import com.un.memory.unit.MemoryUnit;
 
 public class LearnUtil {
 
+    /**
+     * 学习简单的实体
+     */
     public static void learnSimpleEntity(MemoryAll all, String entityName) {
         if (all == null) {
             return;
@@ -12,7 +15,7 @@ public class LearnUtil {
 
         MemoryUnit unit = all.checkSingleType(AreaType.CODE_CHAR, entityName);
         if (unit == null) {
-            MemoryUtil.addArea(all, AreaType.CODE_CHAR);
+//            MemoryUtil.addArea(all, AreaType.CODE_CHAR);
         } else {
 
         }
