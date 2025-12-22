@@ -5,6 +5,7 @@ import com.un.memory.unit.MemoryUnit;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
@@ -27,10 +28,6 @@ public class MemoryAll {
      * 遍历所有区域
      */
     public void checkAllArea(Function<MemoryArea, Void> func) {
-        if (areas == null) {
-            return;
-        }
-
         for (Map<Integer, MemoryArea> singleTypeAreas : areas.values()) {
             for (MemoryArea a : singleTypeAreas.values()) {
                 func.apply(a);
@@ -39,20 +36,33 @@ public class MemoryAll {
     }
 
     /**
-     *
+     * 遍历某一类型区域
+     * 如果func返回true,表示已处理此区域
      */
-    public MemoryUnit checkSingleType(int areaType, String entityName) {
-        if (areas == null) {
-            return null;
+    public void checkSingleTypeArea(int areaType, Function<MemoryArea, Boolean> func) {
+        Map<Integer, MemoryArea> map = areas.get(areaType);
+        if (map == null) {
+            return;
         }
 
+        for (MemoryArea a : map.values()) {
+            if (func.apply(a)) {
+                return;
+            }
+        }
+    }
+
+    /**
+     * 查找某一区域中的单元
+     */
+    public MemoryUnit findUnit(int areaType, String entityName) {
         Map<Integer, MemoryArea> singleTypeAreas = areas.get(areaType);
         if (singleTypeAreas == null) {
             return null;
         }
 
         for (MemoryArea a : singleTypeAreas.values()) {
-            MemoryUnit unit = a.searchUnit(entityName);
+            MemoryUnit unit = a.findUnit(entityName);
             if (unit != null) {
                 return unit;
             }
@@ -71,11 +81,34 @@ public class MemoryAll {
     /**
      * 添加某一类型的区域
      */
-    private void addArea(int areaType) {
+    private MemoryArea addArea(int areaType) {
         MemoryArea area = new MemoryArea(areaType, meta.getStartSeq(), meta.getGroupSize());
         addArea(areaType, meta.getStartSeq(), area);
-
         meta.increaseStartSeq();
+
+        return area;
+    }
+
+    /**
+     * 添加单元,不检查是否存在
+     */
+    public MemoryUnit addUnit(Integer areaType, String entityName) {
+        AtomicReference<MemoryUnit> result = new AtomicReference<>();
+        checkSingleTypeArea(areaType, memoryArea -> {
+            if (memoryArea.haveEmptyPlace()) {
+                result.set(memoryArea.addUnit(entityName));
+                return true;
+            } else {
+                return false;
+            }
+        });
+
+        if (result.get() == null) {
+            MemoryArea area = addArea(areaType);
+            result.set(area.addUnit(entityName));
+        }
+
+        return result.get();
     }
 
     public MemoryMeta getMeta() {

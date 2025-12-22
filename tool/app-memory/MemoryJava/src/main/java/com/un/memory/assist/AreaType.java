@@ -11,7 +11,7 @@ public class AreaType {
     public static final int CODE_CHAR = 300;
 
     /**
-     * 逻辑语义
+     * 实体语义
      */
-    public static final int LOGIC_SEMANTIC = 1000;
+    public static final int ENTITY_SEMANTIC = 1000;
 }

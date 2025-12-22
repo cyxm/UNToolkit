@@ -2,6 +2,7 @@ package com.un.memory.net;
 
 import com.un.memory.unit.MemoryUnit;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +25,9 @@ public class MemoryArea {
      */
     int areaType;
 
-    List<MemoryUnit> unitNet;
+    List<MemoryUnit> unitNet = new ArrayList<>();
 
-    transient Map<String, MemoryUnit> unitCache;
+    transient Map<String, MemoryUnit> unitCache = new HashMap<>();
 
     /**
      * 此区域是否有更改
@@ -43,20 +44,31 @@ public class MemoryArea {
     }
 
     public void cache() {
-        if (unitNet == null) {
-            return;
-        }
-
-        if (unitCache == null) {
-            unitCache = new HashMap<>();
-        }
-
         for (MemoryUnit unit : unitNet) {
             unitCache.put(unit.getInfo(), unit);
         }
     }
 
-    public MemoryUnit searchUnit(String entityName) {
+    /**
+     * 是否还有空余的单元
+     */
+    public boolean haveEmptyPlace() {
+        return count < maxCount;
+    }
+
+    /**
+     * 添加单元,不检查
+     */
+    public MemoryUnit addUnit(String entityName) {
+        MemoryUnit unit = new MemoryUnit(min + count, entityName);
+        unitNet.add(unit);
+        unitCache.put(entityName, unit);
+        count++;
+
+        return unit;
+    }
+
+    public MemoryUnit findUnit(String entityName) {
         return unitCache.get(entityName);
     }
 
