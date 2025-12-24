@@ -31,10 +31,6 @@ public class PersistUtil {
             return;
         }
 
-        if (all == null) {
-            return;
-        }
-
         MemoryMeta meta = all.getMeta();
         if (meta == null) {
             return;
@@ -49,16 +45,13 @@ public class PersistUtil {
     }
 
     public static void saveArea(String dir, MemoryAll all) {
-        if (all == null) {
-            return;
-        }
         all.checkAllArea(memoryArea -> {
             if (!memoryArea.isModify()) {
                 return null;
             }
             String allStr = new Gson().toJson(memoryArea);
             try {
-                FileUtils.write(getMetaFile(dir), allStr, StandardCharsets.UTF_8);
+                FileUtils.write(getAreaFile(dir, memoryArea), allStr, StandardCharsets.UTF_8);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -115,6 +108,15 @@ public class PersistUtil {
         Path path = Paths.get(
                 dir,
                 "meta"
+        );
+        return path.toFile();
+    }
+
+    public static File getAreaFile(String dir, MemoryArea area) {
+        Path path = Paths.get(
+                dir,
+                area.getAreaType() + "",
+                area.getMin() + ""
         );
         return path.toFile();
     }

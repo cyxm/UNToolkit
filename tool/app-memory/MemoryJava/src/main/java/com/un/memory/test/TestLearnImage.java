@@ -11,6 +11,8 @@ public class TestLearnImage {
         MemoryAll all = PersistUtil.preload(TestPath.ROOT_PATH);
         PersistUtil.loadSingleTypeArea(TestPath.ROOT_PATH, AreaType.CODE_CHAR, all);
 
-        LearnUtil.learnSimpleEntity(all, "猫");
+        LearnUtil.learnSimpleEntity(all, "猫", "猫");
+
+        PersistUtil.save(TestPath.ROOT_PATH, all);
     }
 }

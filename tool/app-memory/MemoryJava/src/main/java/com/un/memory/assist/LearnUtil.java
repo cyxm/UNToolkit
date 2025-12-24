@@ -11,8 +11,9 @@ public class LearnUtil {
     /**
      * 学习简单的实体
      */
-    public static void learnSimpleEntity(MemoryAll all, String entityName) {
-        if (entityName == null || entityName.isEmpty()) {
+    public static void learnSimpleEntity(MemoryAll all, String entityCode, String entityName) {
+        if (entityCode == null || entityCode.isEmpty()
+                || entityName == null || entityName.isEmpty()) {
             return;
         }
 
@@ -24,13 +25,27 @@ public class LearnUtil {
                     unitChars.add(unitChar);
                 });
 
-        MemoryUnit unitSemantic = all.addUnit(AreaType.ENTITY_SEMANTIC, entityName);
+        MemoryUnit unitSemantic = all.addUnit(AreaType.ENTITY_SEMANTIC, entityCode);
 
         //建立字符到简单实体的联系
-        long currentTime = System.currentTimeMillis();
-        for (MemoryUnit unit : unitChars) {
-            unit.setNext(unitSemantic.getId(), 100, currentTime);
-            unitSemantic.setNext(unit.getId(), 100, currentTime);
+        MemoryUnit lastUnit = null;
+        for (int i = 0; i < unitChars.size(); i++) {
+            MemoryUnit unit = unitChars.get(i);
+            //按顺序建立上下字符间的联系
+            if (lastUnit != null) {
+                lastUnit.setNextWeak(unit);
+            }
+
+            //实体语义到字符的联系
+            if (lastUnit == null) {
+                unitSemantic.setNextStrong(unit);
+                unit.setNextStrong(unitSemantic);
+            } else {
+                unitSemantic.setNextWeak(unit);
+                unit.setNextWeak(unitSemantic);
+            }
+
+            lastUnit = unit;
         }
     }
 }

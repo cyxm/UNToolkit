@@ -2,7 +2,6 @@ package com.un.memory.unit;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class MemoryUnit {
     int id;
@@ -10,6 +9,21 @@ public class MemoryUnit {
     List<Integer> next = new ArrayList<>();
     List<Integer> strength = new ArrayList<>();
     List<Long> time = new ArrayList<>();
+
+    public void setNextStrong(MemoryUnit nextUnit) {
+        setNext(nextUnit, 100);
+    }
+
+    public void setNextWeak(MemoryUnit nextUnit) {
+        setNext(nextUnit, 10);
+    }
+
+    public void setNext(MemoryUnit nextUnit, int strength) {
+        if (nextUnit == null) {
+            return;
+        }
+        setNext(nextUnit.getId(), strength, System.currentTimeMillis());
+    }
 
     public void setNext(int nextId, int connectStrength, long updateTime) {
         next.add(nextId);
