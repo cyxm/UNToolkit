@@ -34,6 +34,13 @@ public class MemoryArea {
      */
     transient boolean modifyFlag = false;
 
+    /**
+     * 用于Gson创建对象
+     */
+    public MemoryArea() {
+        this.unitCache = new HashMap<>();
+    }
+
     public MemoryArea(int areaType, int min, int maxCount) {
         this.areaType = areaType;
         this.min = min;
@@ -47,6 +54,10 @@ public class MemoryArea {
         for (MemoryUnit unit : unitNet) {
             unitCache.put(unit.getInfo(), unit);
         }
+    }
+
+    public boolean haveUnit(String entityName) {
+        return unitCache.containsKey(entityName);
     }
 
     /**

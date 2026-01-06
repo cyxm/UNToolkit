@@ -5,6 +5,7 @@ import com.un.memory.unit.MemoryUnit;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -93,22 +94,36 @@ public class MemoryAll {
      * 添加单元,不检查是否存在
      */
     public MemoryUnit addUnit(Integer areaType, String entityName) {
-        AtomicReference<MemoryUnit> result = new AtomicReference<>();
+        AtomicReference<MemoryUnit> existUnit = new AtomicReference<>();
         checkSingleTypeArea(areaType, memoryArea -> {
-            if (memoryArea.haveEmptyPlace()) {
-                result.set(memoryArea.addUnit(entityName));
+            if (memoryArea.haveUnit(entityName)) {
+                existUnit.set(memoryArea.findUnit(entityName));
                 return true;
-            } else {
-                return false;
             }
+
+            return false;
         });
 
-        if (result.get() == null) {
-            MemoryArea area = addArea(areaType);
-            result.set(area.addUnit(entityName));
+        MemoryUnit unit = existUnit.get();
+        if (unit != null) {
+            return unit;
         }
 
-        return result.get();
+        AtomicReference<MemoryUnit> newUnit = new AtomicReference<>();
+        checkSingleTypeArea(areaType, memoryArea -> {
+            if (memoryArea.haveEmptyPlace()) {
+                newUnit.set(memoryArea.addUnit(entityName));
+                return true;
+            }
+
+            return false;
+        });
+        unit = newUnit.get();
+        if (unit == null) {
+            MemoryArea area = addArea(areaType);
+            unit = area.addUnit(entityName);
+        }
+        return unit;
     }
 
     public MemoryMeta getMeta() {

@@ -97,6 +97,7 @@ public class PersistUtil {
                         StandardCharsets.UTF_8
                 );
                 MemoryArea area = new Gson().fromJson(areaStr, MemoryArea.class);
+                area.cache();
                 all.addArea(areaType, area.getMin(), area);
             } catch (IOException e) {
                 e.printStackTrace();
