@@ -1,7 +1,7 @@
 {
     "name": "@un/tool-project",
     "private": true,
-    "packageManager": "pnpm@10.14.0",
+    "packageManager": "pnpm@10.32.1",
     "version": "0.0.1",
     "type": "module",
     "scripts": {
@@ -17,16 +17,18 @@
         "prisma:pull": "npx prisma db pull"
     },
     "devDependencies": {
-        "@changesets/cli": "^2.29.6",
-        "node-abi": "^4.14.0",
-        "prettier": "^3.6.2",
-        "prisma": "^6.16.2",
-        "turbo": "^2.5.6",
-        "typescript": "^5.9.2",
-        "wait-on": "^8.0.4"
+        "node-abi": "^4.28.0",
+        "prettier": "^3.8.1",
+        "prisma": "^7.5.0",
+        "turbo": "^2.8.20",
+        "typescript": "^5.9.3",
+        "wait-on": "^9.0.4"
     },
     "engines": {
         "node": ">=18",
         "pnpm": ">=8"
+    },
+    "dependencies": {
+        "zustand": "^5.0.12"
     }
 }

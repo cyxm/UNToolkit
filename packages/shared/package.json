@@ -1,0 +1,26 @@
+{
+  "name": "@un/tool-shared",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./*": {
+      "types": "./src/*.d.ts",
+      "default": "./src/*.ts"
+    },
+    "./api": {
+      "types": "./src/api/index.ts",
+      "default": "./src/api/index.ts"
+    },
+    "./api/*": {
+      "types": "./src/api/*.ts",
+      "default": "./src/api/*.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}

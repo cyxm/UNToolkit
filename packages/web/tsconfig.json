@@ -1,0 +1,22 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "jsx": "react",
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "src/*"
+            ]
+        },
+        "types": [
+            "../../shared/src/electron_api"
+        ]
+    },
+    "include": [
+        ".",
+        "src"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
