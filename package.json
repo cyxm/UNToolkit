@@ -19,7 +19,6 @@
     "devDependencies": {
         "node-abi": "^4.28.0",
         "prettier": "^3.8.1",
-        "prisma": "^7.5.0",
         "turbo": "^2.8.20",
         "typescript": "^5.9.3",
         "wait-on": "^9.0.4"
@@ -27,8 +26,5 @@
     "engines": {
         "node": ">=18",
         "pnpm": ">=8"
-    },
-    "dependencies": {
-        "zustand": "^5.0.12"
     }
 }

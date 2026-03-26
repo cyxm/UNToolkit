@@ -4,7 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   base: '/',
-  root: path.resolve(__dirname, './'),
+  root: path.resolve(__dirname, './src/page/index'),
   publicDir: path.resolve(__dirname, './public'),
   plugins: [react()],
   server: {
@@ -12,7 +12,7 @@ export default defineConfig({
     open: true
   },
   build: {
-    outDir: 'dist',
+    outDir: '../dist',
     emptyOutDir: true
   },
   resolve: {

@@ -7,10 +7,7 @@
             "@/*": [
                 "src/*"
             ]
-        },
-        "types": [
-            "../../shared/src/electron_api"
-        ]
+        }
     },
     "include": [
         ".",
