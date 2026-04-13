@@ -4,8 +4,20 @@ import type { ElectronAPI } from "@un/tool-shared/electron_api"
 // 实现API接口
 const electronAPI: ElectronAPI = {
     file: {
-        readFile: async (path) => await ipcRenderer.invoke('file:read', path),
-        writeFile: async (path, content) => await ipcRenderer.invoke('file:write', path, content)
+        readFile: async (name) => await ipcRenderer.invoke('file:read', name),
+        writeFile: async (name, content) => await ipcRenderer.invoke('file:write', name, content),
+        saveAs: async (name, content, path) => await ipcRenderer.invoke('file:saveAs', name, content, path),
+        list: async () => await ipcRenderer.invoke('file:list'),
+        delete: async (name) => await ipcRenderer.invoke('file:delete', name),
+        import: async () => await ipcRenderer.invoke('file:import'),
+        selectDirectory: async () => await ipcRenderer.invoke('file:selectDirectory'),
+        createCollection: async (name, path) => await ipcRenderer.invoke('file:createCollection', name, path),
+        deleteCollection: async (name, path) => await ipcRenderer.invoke('file:deleteCollection', name, path),
+        listFilesInCollection: async (collection, path) => await ipcRenderer.invoke('file:listFilesInCollection', collection, path),
+        saveToCollection: async (collection, name, content, path) => await ipcRenderer.invoke('file:saveToCollection', collection, name, content, path),
+        loadFromCollection: async (collection, name, path) => await ipcRenderer.invoke('file:loadFromCollection', collection, name, path),
+        deleteFromCollection: async (collection, name, path) => await ipcRenderer.invoke('file:deleteFromCollection', collection, name, path),
+        getDefaultFolder: async () => await ipcRenderer.invoke('file:getDefaultFolder')
     },
     system: {
         getOS: async () => await ipcRenderer.invoke('system:os'),

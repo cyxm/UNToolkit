@@ -1,241 +1,264 @@
-// const { ipcMain, dialog } = require("electron");
-// import { app } from 'electron'
-// import path from 'path';
-// import fs from 'fs';
-// import FileUtil from "../util/FileUtil";
+import { ipcMain, dialog, app } from 'electron';
+import path from 'node:path';
+import fs from 'node:fs';
 
-const mainHandlers = [
-    // { name: "openFile", handle: ()=>{} },
+let graphDataPath: string | null = null;
 
-    // { name: "api:getEndpoints", handle: handleGetApiEndpoints },
-    // { name: "api:call", handle: handleCallApi },
-
-    // { name: "databases:create", handle: handleCreateDatabase },
-    // { name: "databases:query", handle: handleQueryDatabases },
-    // { name: "databases:update", handle: handleUpdateDatabase },
-    // { name: "databases:delete", handle: handleDeleteDatabase },
-
-    // { name: "tables:create", handle: handleCreateTable },
-    // { name: "tables:query", handle: handleQueryTables },
-    // { name: "tables:update", handle: handleUpdateTable },
-    // { name: "tables:delete", handle: handleDeleteTable },
-
-    // { name: "fields:create", handle: handleCreateField },
-    // { name: "fields:query", handle: handleQueryFields },
-    // { name: "fields:update", handle: handleUpdateField },
-    // { name: "fields:delete", handle: handleDeleteField },
-]
-
-export function registerMainHandler() {
-    // mainHandlers.forEach(element => {
-    //     ipcMain.handle(element.name, element.handle);
-    // });
+function getGraphDataPath(): string {
+    if (!graphDataPath) {
+        const userDataPath = app.getPath('userData');
+        graphDataPath = path.join(userDataPath, 'graph-data');
+        if (!fs.existsSync(graphDataPath)) {
+            fs.mkdirSync(graphDataPath, { recursive: true });
+        }
+    }
+    return graphDataPath;
 }
 
-// async function handleCreateField(
-//     event: Electron.IpcMainInvokeEvent,
-//     data: Prisma.fieldsCreateInput
-// ) {
-//     try {
-//         const field = await prisma.fields.create({
-//             data: data
-//         });
-//         return { success: true, id: field.id };
-//     } catch (err) {
-//         console.error('Failed to create field:', err);
-//         return { success: false, error: "Failed to create field" };
-//     }
-// }
+async function handleFileRead(event: Electron.IpcMainInvokeEvent, name: string): Promise<string | null> {
+    try {
+        const dataPath = getGraphDataPath();
+        const filePath = path.join(dataPath, `${name}.json`);
+        if (fs.existsSync(filePath)) {
+            return fs.readFileSync(filePath, 'utf-8');
+        }
+        return null;
+    } catch (err) {
+        console.error('Failed to read file:', err);
+        return null;
+    }
+}
 
-// async function handleQueryFields(
-//     event: Electron.IpcMainInvokeEvent,
-//     params: Prisma.fieldsFindManyArgs
-// ) {
-//     try {
-//         const fields = await prisma.fields.findMany(params);
-//         return {
-//             success: true,
-//             data: fields
-//         };
-//     } catch (err) {
-//         console.error('Failed to query fields:', err);
-//         return { success: false, error: "Failed to query fields" };
-//     }
-// }
+async function handleFileWrite(event: Electron.IpcMainInvokeEvent, name: string, content: string): Promise<boolean> {
+    try {
+        const dataPath = getGraphDataPath();
+        const filePath = path.join(dataPath, `${name}.json`);
+        fs.writeFileSync(filePath, content, 'utf-8');
+        return true;
+    } catch (err) {
+        console.error('Failed to write file:', err);
+        return false;
+    }
+}
 
-// async function handleUpdateField(
-//     event: Electron.IpcMainInvokeEvent,
-//     data: Prisma.fieldsUpdateArgs
-// ) {
-//     try {
-//         const result = await prisma.fields.update(data);
-//         return { success: true, changes: 1 };
-//     } catch (err) {
-//         console.error('Failed to update field:', err);
-//         return { success: false, error: "Failed to update field" };
-//     }
-// }
+async function handleFileList(): Promise<string[]> {
+    try {
+        const dataPath = getGraphDataPath();
+        if (!fs.existsSync(dataPath)) {
+            return [];
+        }
+        const files = fs.readdirSync(dataPath);
+        return files
+            .filter(file => file.endsWith('.json'))
+            .map(file => file.replace('.json', ''));
+    } catch (err) {
+        console.error('Failed to list files:', err);
+        return [];
+    }
+}
 
-// async function handleDeleteField(
-//     event: Electron.IpcMainInvokeEvent,
-//     id: number
-// ) {
-//     try {
-//         const result = await prisma.fields.delete({
-//             where: { id }
-//         });
-//         return { success: true, changes: 1 };
-//     } catch (err) {
-//         console.error('Failed to delete field:', err);
-//         return { success: false, error: "Failed to delete field" };
-//     }
-// }
+async function handleFileDelete(event: Electron.IpcMainInvokeEvent, name: string): Promise<boolean> {
+    try {
+        const dataPath = getGraphDataPath();
+        const filePath = path.join(dataPath, `${name}.json`);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        return true;
+    } catch (err) {
+        console.error('Failed to delete file:', err);
+        return false;
+    }
+}
 
-// async function handleFileOpen() {
-//     let path = app.getAppPath();
-//     dialog.showMessageBox({ type: 'info', message: path })
-// }
+async function handleFileImport(): Promise<{ name: string; content: string } | null> {
+    try {
+        const result = await dialog.showOpenDialog({
+            filters: [{ name: 'JSON Files', extensions: ['json'] }],
+            properties: ['openFile']
+        });
 
+        if (result.canceled || result.filePaths.length === 0) {
+            return null;
+        }
 
+        const filePath = result.filePaths[0];
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const name = path.basename(filePath, '.json');
 
-// async function handleGetApiEndpoints() {
-//     // 这里应该是实际的API端点获取逻辑
-//     // 暂时返回模拟数据
-//     return [
-//         { id: 'users', name: '用户API' },
-//         { id: 'products', name: '产品API' },
-//         { id: 'orders', name: '订单API' }
-//     ];
-// }
+        return { name, content };
+    } catch (err) {
+        console.error('Failed to import file:', err);
+        return null;
+    }
+}
 
-// async function handleCallApi(endpoint: string, params: string) {
-//     // 这里应该是实际的API调用逻辑
-//     // 暂时返回模拟结果
-//     return {
-//         success: true,
-//         endpoint,
-//         params: JSON.parse(params),
-//         data: `Called ${endpoint} API with params: ${params}`
-//     };
-// }
+async function handleFileSaveAs(event: Electron.IpcMainInvokeEvent, defaultName: string, content: string, defaultPath?: string): Promise<string | null> {
+    try {
+        const dialogOptions: Electron.SaveDialogOptions = {
+            defaultPath: defaultName.endsWith('.json') ? defaultName : `${defaultName}.json`,
+            filters: [{ name: 'JSON Files', extensions: ['json'] }]
+        };
+        
+        if (defaultPath) {
+            dialogOptions.defaultPath = require('path').join(defaultPath, dialogOptions.defaultPath);
+        }
+        
+        const result = await dialog.showSaveDialog(dialogOptions);
 
-// async function handleCreateDatabase(
-//     event: Electron.IpcMainInvokeEvent,
-//     data: Prisma.databasesCreateInput
-// ) {
-//     try {
-//         const database = await prisma.databases.create({
-//             data: data
-//         });
-//         return { success: true, id: database.id };
-//     } catch (err) {
-//         console.error('Failed to create database:', err);
-//         return { success: false, error: "Failed to create database" };
-//     }
-// }
+        if (result.canceled || !result.filePath) {
+            return null;
+        }
 
-// async function handleQueryDatabases(
-//     event: Electron.IpcMainInvokeEvent,
-//     params: Prisma.databasesFindManyArgs
-// ) {
-//     try {
-//         const databases = await prisma.databases.findMany(params);
-//         return { success: true, data: databases };
-//     } catch (err) {
-//         console.error('Failed to query databases:', err);
-//         return { success: false, error: "Failed to query databases" };
-//     }
-// }
+        fs.writeFileSync(result.filePath, content, 'utf-8');
+        return path.basename(result.filePath, '.json');
+    } catch (err) {
+        console.error('Failed to save file:', err);
+        return null;
+    }
+}
 
-// async function handleUpdateDatabase(
-//     event: Electron.IpcMainInvokeEvent,
-//     data: Prisma.databasesUpdateArgs
-// ) {
-//     try {
-//         const result = await prisma.databases.update({
-//             where: { id: data.where?.id },
-//             data: {
-//                 version: data.data?.version,
-//                 name: data.data?.name,
-//                 enable: data.data?.enable
-//             }
-//         });
-//         return { success: true, changes: 1 };
-//     } catch (err) {
-//         console.error('Failed to update database:', err);
-//         return { success: false, error: "Failed to update database" };
-//     }
-// }
+async function handleFileSelectDirectory(): Promise<string | null> {
+    try {
+        const result = await dialog.showOpenDialog({
+            properties: ['openDirectory']
+        });
 
-// async function handleDeleteDatabase(event: Electron.IpcMainInvokeEvent, id: number) {
-//     try {
-//         const result = await prisma.databases.delete({
-//             where: { id }
-//         });
-//         return { success: true, changes: 1 };
-//     } catch (err) {
-//         console.error('Failed to delete database:', err);
-//         return { success: false, error: "Failed to delete database" };
-//     }
-// }
+        if (result.canceled || result.filePaths.length === 0) {
+            return null;
+        }
 
-// async function handleCreateTable(
-//     event: Electron.IpcMainInvokeEvent,
-//     data: Prisma.tablesCreateInput
-// ) {
-//     try {
-//         const table = await prisma.tables.create({
-//             data: data
-//         });
-//         return { success: true, id: table.id };
-//     } catch (err) {
-//         console.error('Failed to create table:', err);
-//         return { success: false, error: "Failed to create table" };
-//     }
-// }
+        return result.filePaths[0];
+    } catch (err) {
+        console.error('Failed to select directory:', err);
+        return null;
+    }
+}
 
-// async function handleQueryTables(
-//     event: Electron.IpcMainInvokeEvent,
-//     params: Prisma.tablesFindManyArgs
-// ) {
-//     try {
-//         const tables = await prisma.tables.findMany(params);
-//         return { success: true, data: tables };
-//     } catch (err) {
-//         console.error('Failed to query tables:', err);
-//         return { success: false, error: "Failed to query tables" };
-//     }
-// }
+async function handleFileCreateCollection(event: Electron.IpcMainInvokeEvent, name: string, path?: string): Promise<boolean> {
+    try {
+        if (path) {
+            const fs = require('fs');
+            const folderPath = require('path').join(path, name);
+            if (!fs.existsSync(folderPath)) {
+                fs.mkdirSync(folderPath, { recursive: true });
+            }
+        }
+        return true;
+    } catch (err) {
+        console.error('Failed to create collection:', err);
+        return false;
+    }
+}
 
-// async function handleUpdateTable(data: Prisma.tablesUpdateArgs) {
-//     try {
-//         const result = await prisma.tables.update({
-//             where: { id: data.where?.id },
-//             data: {
-//                 version: data.data?.version,
-//                 name: data.data?.name,
-//                 enable: data.data?.enable,
-//                 database_id: data.data?.database_id
-//             }
-//         });
-//         return { success: true, changes: 1 };
-//     } catch (err) {
-//         console.error('Failed to update table:', err);
-//         return { success: false, error: "Failed to update table" };
-//     }
-// }
+async function handleFileDeleteCollection(event: Electron.IpcMainInvokeEvent, name: string, path?: string): Promise<boolean> {
+    try {
+        if (path) {
+            const fs = require('fs');
+            const folderPath = require('path').join(path, name);
+            if (fs.existsSync(folderPath)) {
+                fs.rmSync(folderPath, { recursive: true, force: true });
+            }
+        }
+        return true;
+    } catch (err) {
+        console.error('Failed to delete collection:', err);
+        return false;
+    }
+}
 
-// async function handleDeleteTable(
-//     event: Electron.IpcMainInvokeEvent,
-//     id: number
-// ) {
-//     try {
-//         const result = await prisma.tables.delete({
-//             where: { id }
-//         });
-//         return { success: true, changes: 1 };
-//     } catch (err) {
-//         console.error('Failed to delete table:', err);
-//         return { success: false, error: "Failed to delete table" };
-//     }
-// }
+async function handleFileListFilesInCollection(event: Electron.IpcMainInvokeEvent, collection: string, path?: string): Promise<string[]> {
+    try {
+        if (path) {
+            const fs = require('fs');
+            const folderPath = require('path').join(path, collection);
+            if (fs.existsSync(folderPath)) {
+                const files = fs.readdirSync(folderPath);
+                return files
+                    .filter((file: string) => file.endsWith('.json'))
+                    .map((file: string) => file.replace('.json', ''));
+            }
+        }
+        return [];
+    } catch (err) {
+        console.error('Failed to list files in collection:', err);
+        return [];
+    }
+}
+
+async function handleFileSaveToCollection(event: Electron.IpcMainInvokeEvent, collection: string, name: string, content: string, path?: string): Promise<boolean> {
+    try {
+        if (path) {
+            const fs = require('fs');
+            const folderPath = require('path').join(path, collection);
+            if (!fs.existsSync(folderPath)) {
+                fs.mkdirSync(folderPath, { recursive: true });
+            }
+            const filePath = require('path').join(folderPath, `${name}.json`);
+            fs.writeFileSync(filePath, content, 'utf-8');
+        }
+        return true;
+    } catch (err) {
+        console.error('Failed to save to collection:', err);
+        return false;
+    }
+}
+
+async function handleFileLoadFromCollection(event: Electron.IpcMainInvokeEvent, collection: string, name: string, path?: string): Promise<string | null> {
+    try {
+        if (path) {
+            const fs = require('fs');
+            const filePath = require('path').join(path, collection, `${name}.json`);
+            if (fs.existsSync(filePath)) {
+                return fs.readFileSync(filePath, 'utf-8');
+            }
+        }
+        return null;
+    } catch (err) {
+        console.error('Failed to load from collection:', err);
+        return null;
+    }
+}
+
+async function handleFileDeleteFromCollection(event: Electron.IpcMainInvokeEvent, collection: string, name: string, path?: string): Promise<boolean> {
+    try {
+        if (path) {
+            const fs = require('fs');
+            const filePath = require('path').join(path, collection, `${name}.json`);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+        return true;
+    } catch (err) {
+        console.error('Failed to delete from collection:', err);
+        return false;
+    }
+}
+
+async function handleFileGetDefaultFolder(): Promise<string | null> {
+    try {
+        // 返回用户的文档目录作为默认文件夹
+        return app.getPath('documents');
+    } catch (err) {
+        console.error('Failed to get default folder:', err);
+        return null;
+    }
+}
+
+export function registerMainHandler() {
+    ipcMain.handle('file:read', handleFileRead);
+    ipcMain.handle('file:write', handleFileWrite);
+    ipcMain.handle('file:list', handleFileList);
+    ipcMain.handle('file:delete', handleFileDelete);
+    ipcMain.handle('file:import', handleFileImport);
+    ipcMain.handle('file:saveAs', handleFileSaveAs);
+    ipcMain.handle('file:selectDirectory', handleFileSelectDirectory);
+    ipcMain.handle('file:createCollection', handleFileCreateCollection);
+    ipcMain.handle('file:deleteCollection', handleFileDeleteCollection);
+    ipcMain.handle('file:listFilesInCollection', handleFileListFilesInCollection);
+    ipcMain.handle('file:saveToCollection', handleFileSaveToCollection);
+    ipcMain.handle('file:loadFromCollection', handleFileLoadFromCollection);
+    ipcMain.handle('file:deleteFromCollection', handleFileDeleteFromCollection);
+    ipcMain.handle('file:getDefaultFolder', handleFileGetDefaultFolder);
+}

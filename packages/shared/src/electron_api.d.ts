@@ -1,9 +1,20 @@
 // 定义主进程与渲染进程通信的API接口
 export interface ElectronAPI {
-    // 文件操作接口
     file: {
-        readFile: (path: string) => Promise<string>;
-        writeFile: (path: string, content: string) => Promise<boolean>;
+        readFile: (name: string) => Promise<string | null>;
+        writeFile: (name: string, content: string) => Promise<boolean>;
+        saveAs: (name: string, content: string, path?: string) => Promise<string | null>;
+        list: () => Promise<string[]>;
+        delete: (name: string) => Promise<boolean>;
+        import: () => Promise<{ name: string; content: string } | null>;
+        selectDirectory: () => Promise<string | null>;
+        createCollection: (name: string, path?: string) => Promise<boolean>;
+        deleteCollection: (name: string, path?: string) => Promise<boolean>;
+        listFilesInCollection: (collection: string, path?: string) => Promise<string[]>;
+        saveToCollection: (collection: string, name: string, content: string, path?: string) => Promise<boolean>;
+        loadFromCollection: (collection: string, name: string, path?: string) => Promise<string | null>;
+        deleteFromCollection: (collection: string, name: string, path?: string) => Promise<boolean>;
+        getDefaultFolder: () => Promise<string | null>;
     };
 
     // 系统信息接口

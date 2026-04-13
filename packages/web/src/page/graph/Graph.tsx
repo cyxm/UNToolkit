@@ -1,48 +1,12 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Box, Stack } from '@mui/material';
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import GraphToolbar from './GraphToolbar.js';
 import GraphCanvas from './GraphCanvas.js';
-import { useGraphDataStore } from './graphDataStore.js';
+import GraphProperties from './GraphProperties.js';
+import GraphSidebar from './GraphSidebar.js';
 
 export default function Graph() {
-  const { addNode, addEdge } = useGraphDataStore();
-
-  useEffect(() => {
-    addNode({
-      id: 'node1',
-      label: '开始',
-      x: 100,
-      y: 100,
-      width: 100,
-      height: 40,
-      shape: 'rect',
-      fill: '#f5f5f5',
-      stroke: '#333',
-      strokeWidth: 1,
-    });
-
-    addNode({
-      id: 'node2',
-      label: '处理',
-      x: 300,
-      y: 100,
-      width: 100,
-      height: 40,
-      shape: 'rect',
-      fill: '#e3f2fd',
-      stroke: '#1976d2',
-      strokeWidth: 1,
-    });
-
-    addEdge({
-      id: 'edge1',
-      source: 'node1',
-      target: 'node2',
-      stroke: '#333',
-      strokeWidth: 1,
-    });
-  }, []);
-
   return (
     <Stack
       direction="column"
@@ -53,9 +17,19 @@ export default function Graph() {
       }}
     >
       <GraphToolbar />
-      <Box sx={{ flexGrow: 1, position: 'relative' }}>
-        <GraphCanvas />
-      </Box>
+      <PanelGroup direction="horizontal" style={{ flexGrow: 1 }}>
+        <Panel defaultSize={15} minSize={10} maxSize={25}>
+          <GraphSidebar />
+        </Panel>
+        <PanelResizeHandle style={{ width: 4, backgroundColor: '#e0e0e0' }} />
+        <Panel defaultSize={65} minSize={40}>
+          <GraphCanvas />
+        </Panel>
+        <PanelResizeHandle style={{ width: 4, backgroundColor: '#e0e0e0' }} />
+        <Panel defaultSize={20} minSize={15} maxSize={30}>
+          <GraphProperties />
+        </Panel>
+      </PanelGroup>
     </Stack>
   );
 }

@@ -12,17 +12,11 @@ export const router = createBrowserRouter([
       {
         path: '',
         element: <Home />,
-        children: [
-          {
-            index: true,
-            element: <div>请选择功能</div>
-          },
-          {
-            path: 'graph',
-            element: <Graph />
-          }
-        ]
-      }
+      },
+      {
+        path: 'graph',
+        element: <Graph />,
+      },
     ]
   }
 ]);

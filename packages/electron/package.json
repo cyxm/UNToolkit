@@ -6,7 +6,9 @@
   "homepage": ".",
   "scripts": {
     "build": "tsc",
+    "build:watch": "tsc --watch",
     "start": "pnpm run build && wait-on http://localhost:3000 && electron-forge start",
+    "start:dev": "wait-on http://localhost:3000 && electron-forge start",
     "test": "echo \"Error: no test specified\" && exit 1",
     "package": "electron-forge package",
     "make": "electron-forge make"
